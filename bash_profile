@@ -1,0 +1,5 @@
+alias rlb="source ~/.bash_profile && echo \".bash_profile reloaded\""
+alias edb="vi ~/.bash_profile; rlb"
+alias [p="ls;pwd;jobs"
+alias ..="cd .. && pwd"
+alias pip="wget -O - -q icanhazip.com"
