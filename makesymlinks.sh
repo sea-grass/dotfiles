@@ -8,6 +8,7 @@ dotfiles=(
   "screenrc"
   "vimrc"
   "bash_profile"
+  "Xresources"
 )
 
 clearexisting () {
