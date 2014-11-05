@@ -16,7 +16,13 @@ my dotfiles
 
 symlinks to my personal config files:
 
+| config file   | in use by... |
+| .screenrc     | GNU Screen   |
+| .vimrc        | Vim          |
+| .bash_profile | bash         |
+| .Xresources   | X11          |
+
  - .screenrc
  - .vimrc
- - .bashrc
+ - .bash_profile
  - .Xresources
