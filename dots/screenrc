@@ -1,0 +1,15 @@
+termcapinfo xterm*|Eterm|mlterm "hs:ts=\E]0;:fs=\007:ds=\E]0;screen\007"
+
+#disable Wuff -- Wuff messages
+vbell off
+#turn off welcome message
+startup_message off 
+
+#what does autodetach do
+#autodetach on 
+
+#set this window's title
+#shelltitle 'bash'
+
+hardstatus alwayslastline 
+hardstatus '%{= kG}[ %{G}%H %{g}][%= %{= kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B} %d/%m %{W}%c %{g}]'

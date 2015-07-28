@@ -1,13 +1,14 @@
-DESTDIR=`echo $HOME`
-SOURCEDIR=`pwd`
+DESTDIR=$HOME
+SOURCEDIR=`pwd`/dots
 
 array_test[0]="test" || (echo "Error: arrays not supported in this version of bash" && exit 2)
 
 #List of dotfiles in this repo
 dotfiles=(
+  "bash_profile"
+  "bashrc"
   "screenrc"
   "vimrc"
-  "bash_profile"
   "Xresources"
 )
 
@@ -28,8 +29,8 @@ makelink () {
     exit 0
   fi
 
+  echo "ln -s $SOURCEDIR/$1 $DESTDIR/.$1"
   ln -s $SOURCEDIR/$1 $DESTDIR/.$1
-
   echo "made link $DESTDIR/.$1 -> $SOURCEDIR/$1"
 }
 

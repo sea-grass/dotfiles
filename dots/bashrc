@@ -1,0 +1,74 @@
+#
+# ~/.bashrc
+#
+
+# If not running interactively, don't do anything
+[[ $- != *i* ]] && return
+
+
+PS1='[\u@\h \W]\$ '
+set bell-style none
+
+VIRTUALENVWRAPPER=/usr/bin/virtualenvwrapper.sh
+if [ -a $VIRTUALENVWRAPPER ]
+  then
+    source /usr/bin/virtualenvwrapper.sh
+    export WORKON_HOME=~/.virtualenvs
+fi
+
+if [ -n $DISPLAY ]; then
+  xrdb -merge ~/.Xresources
+fi
+
+if hash go 2>/dev/null; then
+  export GOPATH=~/.go
+  export PATH="$PATH:$GOPATH/bin"
+else
+  echo "WARNING: Go not installed"
+fi
+
+if hash node 2>/dev/null; then
+  export PATH="$HOME/.node_modules/bin:$PATH"
+else
+  echo "WARNING: node not installed"
+fi
+
+if hash ruby 2>/dev/null; then
+  export GEMPATH=$(ruby -e "print Gem.user_dir")
+  export PATH="$PATH:$GEMPATH/bin"
+else
+  echo "WARNING: ruby not installed"
+fi
+
+#github: ingydotnet/git-hub
+if [ -d $HOME/.git-hub ]; then
+  export PATH="$HOME/.git-hub/lib:$PATH"
+  export MANPATH="$HOME/.git-hub/man:$MANPATH"
+else
+  echo "WARNING: git-hub not installed"
+fi
+
+if hash canto-curses 2>/dev/null; then
+  alias canto="canto-curses"
+else
+  echo "WARNING: canto-curses not installed"
+fi
+
+#export PATH=/home/chris/aur/torch/install/bin:$PATH  # Added automatically by torch-dist
+#export LD_LIBRARY_PATH=/home/chris/aur/torch/install/lib:$LD_LIBRARY_PATH  # Added automatically by torch-dist
+#export DYLD_LIBRARY_PATH=/home/chris/aur/torch/install/lib:$DYLD_LIBRARY_PATH  # Added automatically by torch-dist
+
+export PATH="$PATH:$HOME/.local/bin"
+
+alias edb="vim ~/.bashrc; rlb"
+alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
+alias inet="ip addr | grep inet"
+alias [p="ls;pwd;jobs"
+alias ..="cd .. && pwd"
+
+alias ne="PATH=$(npm bin):$PATH"
+alias vi="vim"
+alias ls='ls --color=auto'
+
+function talk { echo "`date +%F-%T` $USER: $@" >> ~/talkfile; }
+function cattalk { tail -f ~/talkfile; }
