@@ -60,18 +60,38 @@ fi
 
 export PATH="$PATH:$HOME/.local/bin"
 
-alias edb="vim ~/.bashrc; rlb"
-alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
-alias inet="ip addr | grep inet"
 alias [p="ls;pwd;jobs"
 alias ..="cd .. && pwd"
 
-alias ne="PATH=$(npm bin):$PATH"
-alias vi="vim"
+if hash npm 2>/dev/null; then
+  alias ne="PATH=$(npm bin):$PATH"
+else
+  echo "WARNING: npm not installed"
+fi
+
+if hash ip 2>/dev/null; then
+  alias inet="ip addr | grep inet"
+else
+  echo "WARNING: ip not present; TODO: add inet alt. solution"
+fi
+
+if hash vim 2>/dev/null; then
+  alias vi="vim"
+else
+  echo "WARNING: vim not installed"
+fi
+
+alias edb="vi ~/.bashrc; rlb"
+alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
+
 alias ls='ls --color=auto'
 
 function talk { echo "`date +%F-%T` $USER: $@" >> ~/talkfile; }
 function cattalk { tail -f ~/talkfile; }
 
 # Alias to some custom scripts
-alias open_image="python ~/.virtualenvs/monitor/projects/imageViewer.py"
+if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then
+  alias open_image="python ~/.virtualenvs/monitor/projects/imageViewer.py"
+else
+  echo "WARNING: open_image not available (python script missing)"
+fi
