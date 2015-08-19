@@ -16,7 +16,7 @@ if [ -a $VIRTUALENVWRAPPER ]
     export WORKON_HOME=~/.virtualenvs
 fi
 
-if [ -n $DISPLAY ]; then
+if ! [ -z $DISPLAY ]; then
   xrdb -merge ~/.Xresources
 fi
 
@@ -72,3 +72,6 @@ alias ls='ls --color=auto'
 
 function talk { echo "`date +%F-%T` $USER: $@" >> ~/talkfile; }
 function cattalk { tail -f ~/talkfile; }
+
+# Alias to some custom scripts
+alias open_image="python ~/.virtualenvs/monitor/projects/imageViewer.py"
