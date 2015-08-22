@@ -4,7 +4,8 @@ filetype off                " required
 set nu
 set expandtab
 set tabstop=2
-set shiftwidth=2
+
+let shiftwidth = &tabstop
 
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin("~/.vim/vundle-bundle")

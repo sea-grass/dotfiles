@@ -16,6 +16,23 @@ if [ -a $VIRTUALENVWRAPPER ]
     export WORKON_HOME=~/.virtualenvs
 fi
 
+PEBBLE_SDK_PATH="~/pebble-dev/PebbleSDK-2.9"
+if [ -a $PEBBLE_SDK_PATH ]
+  then
+    export PATH="$PEBBLE_SDK_PATH/bin:$PATH"
+  else
+    echo "WARNING: Pebble SDK not found"
+fi
+
+#Android tools need to see ANDROID_HOME
+export ANDROID_HOME=/opt/android-sdk
+if [ -a $ANDROID_HOME ]; then
+  export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$ANDROID_HOME/tools"
+else
+  echo "WARNING: Android SDK not found"
+  unset $ANDROID_HOME
+fi
+
 if ! [ -z $DISPLAY ]; then
   xrdb -merge ~/.Xresources
 fi
@@ -64,6 +81,9 @@ alias [p="ls;pwd;jobs"
 alias ..="cd .. && pwd"
 
 if hash npm 2>/dev/null; then
+  #ne - aka npm-exec - Use to execute node_modules
+  # within the current project
+  # Usage: ne bower
   alias ne="PATH=$(npm bin):$PATH"
 else
   echo "WARNING: npm not installed"
@@ -95,3 +115,27 @@ if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then
 else
   echo "WARNING: open_image not available (python script missing)"
 fi
+
+# Some custom bash functions
+
+#TODO: Add a link to source for aur() function
+#TODO: Add check for Arch Linux before defining this function
+function aur() {
+  if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 aur-package-name (Downloads aur-package-name.tar.gz)"
+    return -1
+  fi
+  base=https://aur.archlinux.org/packages
+  pkg=$1
+  echo "Downloading $pkg.tar.gz from aur"
+  file=${pkg}.tar.gz
+  url=$base/${pkg:0:2}/${pkg}/$file
+
+  curl $url > $file
+
+  unset pkg
+  unset base
+  unset url
+  unset file
+}
+
