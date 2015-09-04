@@ -30,7 +30,7 @@ if [ -a $ANDROID_HOME ]; then
   export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$ANDROID_HOME/tools"
 else
   echo "WARNING: Android SDK not found"
-  unset $ANDROID_HOME
+  unset ANDROID_HOME
 fi
 
 if ! [ -z $DISPLAY ]; then
