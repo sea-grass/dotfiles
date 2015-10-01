@@ -1,12 +1,15 @@
-DESTDIR=$HOME
-#Get SOURCEDIR from DOTFILES environment variable
-SOURCEDIR="$DOTFILES"
-
-if [ "x$SOURCEDIR" = "x" ]; then
+if [ "x$DOTFILES" = "x" ]; then
   echo "WARNING: DOTFILES environment variable must be set. Did NOTHING."
   echo 'Hint: Try DOTFILES="`pwd`" ./makesymlinks'
   exit
 fi
+
+DESTDIR=$HOME
+#Get SOURCEDIR from DOTFILES environment variable
+SOURCEDIR="$DOTFILES"/dots
+
+
+
 
 array_test[0]="test" || (echo "Error: arrays not supported in this version of bash" && exit 2)
 
