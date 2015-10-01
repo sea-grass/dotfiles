@@ -71,6 +71,13 @@ else
   echo "WARNING: canto-curses not installed"
 fi
 
+if hash chuck 2>/dev/null; then
+  #TODO: Put the else statement's contents into this
+  echo "Do your TODO for chuck"
+else
+  echo "WARNING: chuck is not installed"
+fi
+
 #export PATH=/home/chris/aur/torch/install/bin:$PATH  # Added automatically by torch-dist
 #export LD_LIBRARY_PATH=/home/chris/aur/torch/install/lib:$LD_LIBRARY_PATH  # Added automatically by torch-dist
 #export DYLD_LIBRARY_PATH=/home/chris/aur/torch/install/lib:$DYLD_LIBRARY_PATH  # Added automatically by torch-dist
