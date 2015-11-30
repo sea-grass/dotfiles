@@ -48,6 +48,10 @@ if hash node 2>/dev/null; then
   export PATH="$HOME/.node_modules/bin:$PATH"
 else
   echo "WARNING: node not installed"
+  if hash nodejs 2>/dev/null; then
+    alias node="nodejs"
+    echo "noooode"
+  fi
 fi
 
 if hash ruby 2>/dev/null; then
