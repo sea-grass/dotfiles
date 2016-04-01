@@ -5,6 +5,9 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+#TODO: Add check for xterm, transset-df, xcompmgr first
+[ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
+
 
 PS1='[\u@\h \W]\$ '
 set bell-style none
@@ -117,8 +120,34 @@ alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 
 alias ls='ls --color=auto'
 
-function talk { echo "`date +%F-%T` $USER: $@" >> ~/talkfile; }
-function cattalk { tail -f ~/talkfile; }
+function hawk {
+  if [ "$#" -eq "0" ]; then
+    cathawk
+    return
+  fi
+
+  echo "`date +%F-%T` $USER: $@" >> ~/talkfile;
+}
+function oldhawk { touch ~/talkfile && tail -f ~/talkfile; }
+function cathawk {
+  if [ "$#" -eq "0" ]; then
+    oldhawk
+    return
+  fi
+  date="$1"
+  
+  #TODO: This does not work for multiline comments
+  # Perhaps find the first line in the file and the last line in 
+  # the file that start with the supplied date.
+  # Less the content on and between those two lines.
+  # Test date is 2016-03-17.
+  touch ~/talkfile && cat ~/talkfile | egrep "^$date" | less
+}
+function test {
+  echo "$@"
+  echo "$?"
+  echo "$*"
+}
 
 # Alias to some custom scripts
 if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then

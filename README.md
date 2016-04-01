@@ -12,6 +12,10 @@ my dotfiles
     source ~/.bash_profile
     xrdb -merge ~/.Xresources
 
+Or simply, run `setup.sh`.
+
+    ./setup.sh
+
 ###### what this creates
 
 symlinks to my personal config files:
@@ -26,3 +30,8 @@ symlinks to my personal config files:
  - .vimrc
  - .bash_profile
  - .Xresources
+
+##### TODO
+
+- My vimrc uses vundle, so when the symlinks are first created, vim always complains about blah blah blah. Need to add a section to the script to fix this
+- 

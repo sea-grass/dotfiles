@@ -6,8 +6,13 @@ filetype off                " required
 set nu
 set expandtab
 set tabstop=2
+"For some reason, this let statement wasn't working.
+"Maybe let sets the local value?
+"let shiftwidth = &tabstop
+set shiftwidth=2
 
-let shiftwidth = &tabstop
+" Highlight all search matches (:nohlsearch to turn off)
+set hlsearch
 
 set rtp+=~/.vim/bundle/Vundle.vim
 call vundle#begin("~/.vim/vundle-bundle")
