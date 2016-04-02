@@ -1,7 +1,7 @@
 set nu
 set expandtab
 set tabstop=2
-let shiftwidth = &tabstop
+set shiftwidth=2
 
 "More vim-plug tips on https://github.com/junegunn/vim-plug
 call plug#begin('~/.vim/plugged')
@@ -11,6 +11,11 @@ Plug 'rosenfeld/conque-term'
 
 " Only load vim-javascript when js or html file is opened
 Plug 'pangloss/vim-javascript', { 'for': ['js', 'html'] }
+
+Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
+
+" Only load vim-go when go file is opened
+Plug 'fatih/vim-go', { 'for': ['go'] }
 
 
 call plug#end()

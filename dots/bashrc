@@ -6,7 +6,7 @@
 [[ $- != *i* ]] && return
 
 
-PS1='[\u@\h \W]\$ '
+PS1='[\u@\h \W]\n\$ '
 set bell-style none
 
 VIRTUALENVWRAPPER=/usr/bin/virtualenvwrapper.sh
@@ -41,7 +41,19 @@ if hash go 2>/dev/null; then
   export GOPATH=~/.go
   export PATH="$PATH:$GOPATH/bin"
 else
-  echo "WARNING: Go not installed"
+  if [ -d $HOME/.go/src ]; then
+    export GOPATH=~/.go
+    export PATH="$PATH:$GOPATH/src/go/bin"
+  else
+    echo "WARNING: Go not installed"
+  fi
+
+fi
+
+if hash composer 2>/dev/null; then
+  export PATH="$PATH:~/.composer/vendor/bin"
+else
+  echo "WARNING: Composer not installed"
 fi
 
 if hash node 2>/dev/null; then
@@ -64,6 +76,7 @@ fi
 #github: ingydotnet/git-hub
 if [ -d $HOME/.git-hub ]; then
   export PATH="$HOME/.git-hub/lib:$PATH"
+  alias git=hub
   export MANPATH="$HOME/.git-hub/man:$MANPATH"
 else
   echo "WARNING: git-hub not installed"

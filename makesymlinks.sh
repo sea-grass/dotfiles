@@ -20,6 +20,7 @@ dotfiles=(
   "screenrc"
   "vimrc"
   "Xresources"
+  "tmux.conf"
 )
 
 clearexisting () {
