@@ -22,7 +22,6 @@ Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
 
 " Only load vim-go when go file is opened
 Plug 'fatih/vim-go', { 'for': ['go'] }
->>>>>>> vundle-to-plug
 
 
 call plug#end()
