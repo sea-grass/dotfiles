@@ -5,8 +5,11 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+#TODO: Add check for xterm, transset-df, xcompmgr first
+[ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
 
-PS1='[\u@\h \W]\$ '
+
+PS1='[\u@\h \W]\n\$ '
 set bell-style none
 
 VIRTUALENVWRAPPER=virtualenvwrapper.sh
@@ -47,7 +50,19 @@ if hash go 2>/dev/null; then
   export GOPATH=~/.go
   export PATH="$PATH:$GOPATH/bin"
 else
-  echo "WARNING: Go not installed"
+  if [ -d $HOME/.go/src ]; then
+    export GOPATH=~/.go
+    export PATH="$PATH:$GOPATH/src/go/bin"
+  else
+    echo "WARNING: Go not installed"
+  fi
+
+fi
+
+if hash composer 2>/dev/null; then
+  export PATH="$PATH:~/.composer/vendor/bin"
+else
+  echo "WARNING: Composer not installed"
 fi
 
 if hash node 2>/dev/null; then
@@ -70,6 +85,7 @@ fi
 #github: ingydotnet/git-hub
 if [ -d $HOME/.git-hub ]; then
   export PATH="$HOME/.git-hub/lib:$PATH"
+  alias git=hub
   export MANPATH="$HOME/.git-hub/man:$MANPATH"
 else
   echo "WARNING: git-hub not installed"
@@ -123,8 +139,34 @@ alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 
 alias ls='ls --color=auto'
 
-function talk { echo "`date +%F-%T` $USER: $@" >> ~/talkfile; }
-function cattalk { tail -f ~/talkfile; }
+function hawk {
+  if [ "$#" -eq "0" ]; then
+    cathawk
+    return
+  fi
+
+  echo "`date +%F-%T` $USER: $@" >> ~/talkfile;
+}
+function oldhawk { touch ~/talkfile && tail -f ~/talkfile; }
+function cathawk {
+  if [ "$#" -eq "0" ]; then
+    oldhawk
+    return
+  fi
+  date="$1"
+  
+  #TODO: This does not work for multiline comments
+  # Perhaps find the first line in the file and the last line in 
+  # the file that start with the supplied date.
+  # Less the content on and between those two lines.
+  # Test date is 2016-03-17.
+  touch ~/talkfile && cat ~/talkfile | egrep "^$date" | less
+}
+function test {
+  echo "$@"
+  echo "$?"
+  echo "$*"
+}
 
 # Alias to some custom scripts
 if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then

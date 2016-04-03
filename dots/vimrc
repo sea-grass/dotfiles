@@ -1,29 +1,30 @@
-set nocompatible            " be iMproved, required
-filetype off                " required
-
-
-
 set nu
 set expandtab
 set tabstop=2
+"For some reason, this let statement wasn't working.
+"Maybe let sets the local value?
+"let shiftwidth = &tabstop
+set shiftwidth=2
 
-let shiftwidth = &tabstop
+" Highlight all search matches (:nohlsearch to turn off)
+set hlsearch
 
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin("~/.vim/vundle-bundle")
-Bundle 'gmarik/Vundle.vim'
+"More vim-plug tips on https://github.com/junegunn/vim-plug
+call plug#begin('~/.vim/plugged')
 
-" My Bundles here:
-"
-" original repos on github
-" Bundle 'tpope/vim-fugitive' "(example)
-Bundle 'pangloss/vim-javascript'
-" Bundle 'bling/vim-airline'
-" vim-scripts repos
-" Bundle 'Conque-Shell'
-Bundle 'rosenfeld/conque-term'
+" Make sure to use single quotes
+Plug 'rosenfeld/conque-term'
 
-call vundle#end()                             " required
-filetype plugin indent on                     " required
+" Only load vim-javascript when js or html file is opened
+Plug 'pangloss/vim-javascript', { 'for': ['js', 'html'] }
+
+Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
+
+" Only load vim-go when go file is opened
+Plug 'fatih/vim-go', { 'for': ['go'] }
+
+
+call plug#end()
+
 " prevent auto commenting
-autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+"autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
