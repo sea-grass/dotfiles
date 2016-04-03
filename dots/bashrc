@@ -9,11 +9,17 @@
 PS1='[\u@\h \W]\$ '
 set bell-style none
 
-VIRTUALENVWRAPPER=/usr/bin/virtualenvwrapper.sh
-if [ -a $VIRTUALENVWRAPPER ]
+VIRTUALENVWRAPPER=virtualenvwrapper.sh
+if hash "$VIRTUALENVWRAPPER" 2>/dev/null;
   then
-    source /usr/bin/virtualenvwrapper.sh
     export WORKON_HOME=~/.virtualenvs
+    if ! [ -d "$WORKON_HOME" ]
+      then
+        mkdir -p "$WORKON_HOME"
+    fi
+    source `which "$VIRTUALENVWRAPPER"`
+  else
+    echo "WARNING: virtualenvwrapper not found"
 fi
 
 PEBBLE_SDK_PATH="~/pebble-dev/PebbleSDK-2.9"
