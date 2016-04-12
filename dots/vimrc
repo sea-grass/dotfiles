@@ -23,8 +23,10 @@ Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
 " Only load vim-go when go file is opened
 Plug 'fatih/vim-go', { 'for': ['go'] }
 
+Plug 'maksimr/vim-jsbeautify', { 'do': 'git submodule update --init --recursive' }
+
 
 call plug#end()
 
 " prevent auto commenting
-"autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
