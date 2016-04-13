@@ -21,6 +21,7 @@ dotfiles=(
   "vimrc"
   "Xresources"
   "tmux.conf"
+  "jsbeautifyrc"
 )
 
 clearexisting () {
