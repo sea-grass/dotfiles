@@ -1,0 +1,12 @@
+;.editorconfig
+
+root = true
+
+[**.js]
+;path to optional external js-beautifier
+path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify.js
+; JS interpreter to be invoked
+bin=node
+
+indent_style = space
+indent_size = 2

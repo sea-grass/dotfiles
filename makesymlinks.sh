@@ -22,6 +22,7 @@ dotfiles=(
   "Xresources"
   "tmux.conf"
   "jsbeautifyrc"
+  "editorconfig"
 )
 
 clearexisting () {

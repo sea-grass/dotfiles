@@ -20,10 +20,6 @@ Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
 Plug 'fatih/vim-go', { 'for': ['go'] }
 
 Plug 'scrooloose/syntastic'
-call plug#end()
-
-" prevent auto commenting
-"autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
 " Syntastic suggested settings
 set statusline+=%#warningmsg#
@@ -33,3 +29,10 @@ let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
+Plug 'maksimr/vim-jsbeautify', { 'do': 'git submodule update --init --recursive' }
+
+
+call plug#end()
+
+" prevent auto commenting
+autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
