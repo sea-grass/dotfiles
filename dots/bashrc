@@ -5,6 +5,8 @@
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
 
+START=`date +%s`
+
 #TODO: Add check for xterm, transset-df, xcompmgr first
 [ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
 
@@ -19,7 +21,7 @@ if [ -a $VIRTUALENVWRAPPER ]
     export WORKON_HOME=~/.virtualenvs
 fi
 
-PEBBLE_SDK_PATH="~/pebble-dev/PebbleSDK-2.9"
+PEBBLE_SDK_PATH=~/pebble-dev/pebble-sdk
 if [ -a $PEBBLE_SDK_PATH ]
   then
     export PATH="$PEBBLE_SDK_PATH/bin:$PATH"
@@ -128,34 +130,59 @@ else
   echo "WARNING: vim not installed"
 fi
 
+##
+# Aliases
+##
 alias edb="vi ~/.bashrc; rlb"
 alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 
 alias ls='ls --color=auto'
+alias pj='pwd;jobs'
 
+##
+# Functions
+##
 function hawk {
+  echo "`date +%F-%T` $USER: $@" >> ~/talkfile
+}
+function rock {
   if [ "$#" -eq "0" ]; then
-    cathawk
-    return
+    hawk_list_projects
+  elif [ "$#" -eq "1" ]; then
+    hawk_list_tasks $1 #Pass the project
+  elif [ "$#" -eq "2" ]; then
+    hawk_start_task $1 $2
   fi
+}
+function hawk_list_projects {
+  echo "Working on..."
+  echo "Projects:"
+  echo "1)"
+  echo "2)"
+  # Log action
+  echo "`date +%F-%T` $USER [List Projects]: $@" >> ~/talkfile;
+}
+function hawk_list_tasks {
+  if [ "$#" -ne "1" ]; then
+    echo "Please supply a project number"
+  else
+    echo "Tasks for project $1:"
+    echo "1)"
+    echo "2)"
+  fi
+  # Log action
+  echo "`date +%F-%T` $USER [List Tasks ($1)]: $@" >> ~/talkfile;
+}
+function hawk_start_task {
+  if [ "$#" -ne "2" ]; then
+    echo "Please supply a project and task number"
+  else
+    echo "Starting project $1 task $2"
+  fi
+  # Log action
+  echo "`date +%F-%T` $USER [Start Task ($1 - $2)]: $@" >> ~/talkfile;
+}
 
-  echo "`date +%F-%T` $USER: $@" >> ~/talkfile;
-}
-function oldhawk { touch ~/talkfile && tail -f ~/talkfile; }
-function cathawk {
-  if [ "$#" -eq "0" ]; then
-    oldhawk
-    return
-  fi
-  date="$1"
-  
-  #TODO: This does not work for multiline comments
-  # Perhaps find the first line in the file and the last line in 
-  # the file that start with the supplied date.
-  # Less the content on and between those two lines.
-  # Test date is 2016-03-17.
-  touch ~/talkfile && cat ~/talkfile | egrep "^$date" | less
-}
 function test {
   echo "$@"
   echo "$?"
@@ -192,3 +219,6 @@ function aur() {
   unset file
 }
 
+END=`date +%s`
+
+echo ".bashrc took " $(($END-$START)) " seconds"
