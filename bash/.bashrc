@@ -139,6 +139,22 @@ alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 alias ls='ls --color=auto'
 alias pj='pwd;jobs'
 
+# Define aliases going up 1 dir to MAX_UP_DIRS dirs
+# e.g. ..   = cd ..
+#      ...  = cd ../..
+#      .... = cd ../../..
+MAX_UP_DIRS=5
+for i in `seq 1 $MAX_DIRS`; do
+  cmd="cd ../"
+  alias=".."
+  for j in `seq 1 $(($i-1))`; do
+    alias="$alias."
+    cmd="$cmd../"
+  done
+  #echo "Up $i directory: alias $alias='$cmd'"
+  alias $alias="$cmd"
+done
+
 ##
 # Functions
 ##

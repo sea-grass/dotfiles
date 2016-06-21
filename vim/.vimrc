@@ -9,6 +9,11 @@ set shiftwidth=2
 " Highlight all search matches (:nohlsearch to turn off)
 set hlsearch
 
+" Enable scrolling in vim for urxvt
+" Aaaaactually, don't. When you click in the terminal moves the
+" cursor position, and I don't like that.
+" set mouse=a
+
 "More vim-plug tips on https://github.com/junegunn/vim-plug
 call plug#begin('~/.vim/plugged')
 

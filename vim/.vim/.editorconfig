@@ -3,10 +3,13 @@
 root = true
 
 [**.js]
+indent_style = space
+indent_size = 2
 ;path to optional external js-beautifier
 path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify.js
 ; JS interpreter to be invoked
 bin=node
-
+[**.css]
 indent_style = space
 indent_size = 2
+path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify-css.js
