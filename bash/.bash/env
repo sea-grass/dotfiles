@@ -1,0 +1,7 @@
+#######
+# Env
+#######
+set bell-style none
+
+export PS1='[\u@\h \W]\n\$ '
+export PATH="$PATH:$HOME/.local/bin"
