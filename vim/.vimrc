@@ -16,18 +16,24 @@ set hlsearch
 
 "More vim-plug tips on https://github.com/junegunn/vim-plug
 call plug#begin('~/.vim/plugged')
-
 " Make sure to use single quotes
 Plug 'rosenfeld/conque-term'
 
-" Only load vim-javascript when js or html file is opened
+" Conditional loading for specific plugins
 Plug 'pangloss/vim-javascript', { 'for': ['js', 'html'] }
-
 Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
-
-" Only load vim-go when go file is opened
 Plug 'fatih/vim-go', { 'for': ['go'] }
 
+Plug 'scrooloose/syntastic'
+
+" Syntastic suggested settings
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
 Plug 'maksimr/vim-jsbeautify', { 'do': 'git submodule update --init --recursive' }
 
 
