@@ -1,3 +1,5 @@
+warn=false
+
 #TODO: Add check for xterm, transset-df, xcompmgr first
 [ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
 
@@ -13,7 +15,7 @@ if [ -a $PEBBLE_SDK_PATH ]
   then
     export PATH="$PEBBLE_SDK_PATH/bin:$PATH"
   else
-    echo "WARNING: Pebble SDK not found"
+    [[ "$warn" = true ]] && echo "WARNING: Pebble SDK not found"
 fi
 
 #Android tools need to see ANDROID_HOME
@@ -21,7 +23,7 @@ export ANDROID_HOME=/opt/android-sdk
 if [ -a $ANDROID_HOME ]; then
   export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$ANDROID_HOME/tools"
 else
-  echo "WARNING: Android SDK not found"
+  [[ "$warn" = true ]] && echo "WARNING: Android SDK not found"
   unset ANDROID_HOME
 fi
 
@@ -37,7 +39,7 @@ else
     export GOPATH=~/.go
     export PATH="$PATH:$GOPATH/src/go/bin"
   else
-    echo "WARNING: Go not installed"
+    [[ "$warn" = true ]] && echo "WARNING: Go not installed"
   fi
 
 fi
@@ -45,13 +47,13 @@ fi
 if hash composer 2>/dev/null; then
   export PATH="$PATH:~/.composer/vendor/bin"
 else
-  echo "WARNING: Composer not installed"
+  [[ "$warn" = true ]] && echo "WARNING: Composer not installed"
 fi
 
 if hash node 2>/dev/null; then
   export PATH="$HOME/.node_modules/bin:$PATH"
 else
-  echo "WARNING: node not installed"
+  [[ "$warn" = true ]] && echo "WARNING: node not installed"
   if hash nodejs 2>/dev/null; then
     alias node="nodejs"
     echo "noooode"
@@ -62,7 +64,7 @@ if hash ruby 2>/dev/null; then
   export GEMPATH=$(ruby -e "print Gem.user_dir")
   export PATH="$PATH:$GEMPATH/bin"
 else
-  echo "WARNING: ruby not installed"
+  [[ "$warn" = true ]] && echo "WARNING: ruby not installed"
 fi
 
 #github: ingydotnet/git-hub
@@ -71,20 +73,20 @@ if [ -d $HOME/.git-hub ]; then
   alias git=hub
   export MANPATH="$HOME/.git-hub/man:$MANPATH"
 else
-  echo "WARNING: git-hub not installed"
+  [[ "$warn" = true ]] && echo "WARNING: git-hub not installed"
 fi
 
 if hash canto-curses 2>/dev/null; then
   alias canto="canto-curses"
 else
-  echo "WARNING: canto-curses not installed"
+  [[ "$warn" = true ]] && echo "WARNING: canto-curses not installed"
 fi
 
 if hash chuck 2>/dev/null; then
   #TODO: Put the else statement's contents into this
   echo "Do your TODO for chuck"
 else
-  echo "WARNING: chuck is not installed"
+  [[ "$warn" = true ]] && echo "WARNING: chuck is not installed"
 fi
 
 if hash npm 2>/dev/null; then
@@ -93,24 +95,24 @@ if hash npm 2>/dev/null; then
   # Usage: ne bower
   alias ne="PATH=$(npm bin):$PATH"
 else
-  echo "WARNING: npm not installed"
+  [[ "$warn" = true ]] && echo "WARNING: npm not installed"
 fi
 
 if hash ip 2>/dev/null; then
   alias inet="ip addr | grep inet"
 else
-  echo "WARNING: ip not present; TODO: add inet alt. solution"
+  [[ "$warn" = true ]] && echo "WARNING: ip not present; TODO: add inet alt. solution"
 fi
 
 if hash vim 2>/dev/null; then
   alias vi="vim"
 else
-  echo "WARNING: vim not installed"
+  [[ "$warn" = true ]] && echo "WARNING: vim not installed"
 fi
 
 # Alias to some custom scripts
 if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then
   alias open_image="python ~/.virtualenvs/monitor/projects/imageViewer.py"
 else
-  echo "WARNING: open_image not available (python script missing)"
+  [[ "$warn" = true ]] && echo "WARNING: open_image not available (python script missing)"
 fi
