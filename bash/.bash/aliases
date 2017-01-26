@@ -97,3 +97,4 @@ function aur {
   unset file
 }
 
+alias npm-exec="PATH=$(npm bin):$PATH"

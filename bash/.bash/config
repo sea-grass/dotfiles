@@ -1,5 +1,9 @@
 warn=false
 
+# Local PATH equals the path variable
+# Will export PATH at the end
+PATH="$PATH"
+
 #TODO: Add check for xterm, transset-df, xcompmgr first
 [ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
 
@@ -13,7 +17,7 @@ fi
 PEBBLE_SDK_PATH=~/pebble-dev/pebble-sdk
 if [ -a $PEBBLE_SDK_PATH ]
   then
-    export PATH="$PEBBLE_SDK_PATH/bin:$PATH"
+    PATH="$PEBBLE_SDK_PATH/bin:$PATH"
   else
     [[ "$warn" = true ]] && echo "WARNING: Pebble SDK not found"
 fi
@@ -21,7 +25,7 @@ fi
 #Android tools need to see ANDROID_HOME
 export ANDROID_HOME=/opt/android-sdk
 if [ -a $ANDROID_HOME ]; then
-  export PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$ANDROID_HOME/tools"
+  PATH="$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/build-tools:$ANDROID_HOME/tools"
 else
   [[ "$warn" = true ]] && echo "WARNING: Android SDK not found"
   unset ANDROID_HOME
@@ -32,12 +36,12 @@ if ! [ -z $DISPLAY ]; then
 fi
 
 if hash go 2>/dev/null; then
-  export GOPATH=~/.go
-  export PATH="$PATH:$GOPATH/bin"
+  export GOPATH=$HOME/projects/go-projects
+  PATH="$PATH:$GOPATH/bin"
 else
   if [ -d $HOME/.go/src ]; then
-    export GOPATH=~/.go
-    export PATH="$PATH:$GOPATH/src/go/bin"
+    export GOPATH=/usr/local/go
+    PATH="$PATH:$GOPATH/bin"
   else
     [[ "$warn" = true ]] && echo "WARNING: Go not installed"
   fi
@@ -45,13 +49,13 @@ else
 fi
 
 if hash composer 2>/dev/null; then
-  export PATH="$PATH:~/.composer/vendor/bin"
+  PATH="$PATH:~/.composer/vendor/bin"
 else
   [[ "$warn" = true ]] && echo "WARNING: Composer not installed"
 fi
 
 if hash node 2>/dev/null; then
-  export PATH="$HOME/.node_modules/bin:$PATH"
+  PATH="$HOME/.node_modules/bin:$PATH"
 else
   [[ "$warn" = true ]] && echo "WARNING: node not installed"
   if hash nodejs 2>/dev/null; then
@@ -60,16 +64,26 @@ else
   fi
 fi
 
+echo "a$HOME a"
+if hash npm 2>/dev/null; then
+  # add prefix=$HOME/.npm-packages to .npmrc
+  NPM_PACKAGES="$HOME/.npm-packages"
+  PATH="$NPM_PACKAGES/bin:$PATH"
+  PATH="$HOME/.node_modules/bin:$PATH"
+else
+  [[ "$warn" = true ]] && echo "WARNING: npm not installed"
+fi
+
 if hash ruby 2>/dev/null; then
   export GEMPATH=$(ruby -e "print Gem.user_dir")
-  export PATH="$PATH:$GEMPATH/bin"
+  PATH="$PATH:$GEMPATH/bin"
 else
   [[ "$warn" = true ]] && echo "WARNING: ruby not installed"
 fi
 
 #github: ingydotnet/git-hub
 if [ -d $HOME/.git-hub ]; then
-  export PATH="$HOME/.git-hub/lib:$PATH"
+  PATH="$HOME/.git-hub/lib:$PATH"
   alias git=hub
   export MANPATH="$HOME/.git-hub/man:$MANPATH"
 else
@@ -116,3 +130,5 @@ if [ -a ~/.virtualenvs/monitor/projects/imageViewer.py ]; then
 else
   [[ "$warn" = true ]] && echo "WARNING: open_image not available (python script missing)"
 fi
+
+export PATH="$PATH"
