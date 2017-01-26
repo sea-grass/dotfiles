@@ -9,7 +9,15 @@ indent_size = 2
 path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify.js
 ; JS interpreter to be invoked
 bin=node
+
 [**.css]
 indent_style = space
 indent_size = 2
 path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify-css.js
+
+[**.html]
+indent_style = space
+indent_size = 2
+max_char = 78
+brace_style = expand
+path=~/.vim/plugged/vim-jsbeautify/plugin/lib/js/lib/beautify-html.js
