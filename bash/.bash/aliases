@@ -4,8 +4,10 @@
 alias [p="ls;pwd;jobs"
 alias ..="cd .. && pwd"
 
+# Refresh environment
 alias edb="vi -O ~/.bashrc ~/.bash/{aliases,env,config}; rlb"
 alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
+alias refresh_env="if [ \"x$DISPLAY\" != \"x\" ]; then xrdb -load ~/.Xresources; fi"
 
 alias ls='ls --color=auto'
 alias pj='pwd;jobs'
