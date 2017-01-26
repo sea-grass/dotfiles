@@ -1,0 +1,15 @@
+! fonts
+!xterm*font: -*-fixed-medium-r-*-*-18-*-*-*-*-*-iso8859-*
+!xterm*font1: -*-*-*-*-*-*-2-*-*-*-*-*-*-*
+!xterm*font2: -misc-fixed-*-r-normal-*-8-*-*-*-*-*-iso8859-*
+!xterm*font3: -b&h-lucidatypewriter-bold-*-*-*-12-*-*-*-*-*-*-*
+!xterm*font4: -*-screen-bold-r-normal-*-16-*-*-*-*-*-iso8859-*
+!xterm*font5: -*-lucidatypewriter-medium-*-*-*-18-*-*-*-*-*-*-*
+!xterm*font6: -*-lucidatypewriter-medium-*-*-*-20-*-*-*-*-*-*-*
+!xterm*font7: -dec-terminal-bold-r-normal-*-14-*-*-*-*-*-iso8859-*
+
+!XTerm*faceName: Bitstream Vera Serif Mono
+!xterm*faceSize: 11
+!xterm*faceName: xft:Terminus:size=12
+xterm*faceName: Libration Mono:size=10:antialias=false
+
