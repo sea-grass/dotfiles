@@ -14,3 +14,9 @@ source ~/.vim/plugins
 
 " prevent auto commenting
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
+
+" navigate between open buffers in normal mode
+nmap <Up> :bfirst <Enter>
+nmap <Right> :bnext <Enter>
+nmap <Down> :blast <Enter>
+nmap <Left> :bprev <Enter>
