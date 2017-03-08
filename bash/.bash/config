@@ -1,5 +1,5 @@
 #########
-# Config
+# Bash Config
 #########
 WARN=false
 function warn {

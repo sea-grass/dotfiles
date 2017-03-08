@@ -1,11 +1,11 @@
 ##########
-# Aliases
+# Bash Aliases
 ##########
 alias [p="ls;pwd;jobs"
 alias ..="cd .. && pwd"
 
 # Refresh environment
-alias edb="vi -O ~/.bashrc ~/.bash/{aliases,env,config}; rlb"
+alias edb="vim ~/.bashrc ~/.bash/{aliases,env,config}; rlb"
 alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 alias refresh_env="if [ \"x$DISPLAY\" != \"x\" ]; then xrdb -load ~/.Xresources; fi"
 
@@ -97,6 +97,16 @@ function aur {
   unset base
   unset url
   unset file
+}
+
+function yee {
+  #TODO: After midnight, change prompt to YEEEEEEEEBOIIIIIII
+  # From 12am to 6am
+  if [ "$PS1" == "$PS11" ]; then
+    PS1="$PS12"
+  else
+    PS1="$PS11"
+  fi
 }
 
 alias npm-exec="PATH=$(npm bin):$PATH"
