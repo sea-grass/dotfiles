@@ -9,6 +9,7 @@ Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
 Plug 'fatih/vim-go', { 'for': ['go'] }
 
 Plug 'scrooloose/syntastic'
+"Plug 'starcraftman/vim-eclim'
 
 " Syntastic suggested settings
 set statusline+=%#warningmsg#

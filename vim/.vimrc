@@ -20,7 +20,9 @@ set hlsearch
 au BufNewFile,BufFilePre,BufRead *.md set filetype=markdown
 
 " TODO: Come up with a way to conditionally load plugins
-"source ~/.vim/plugins
+source ~/.vim/plugins
+" Include config required by eclim
+"source ~/.vim/eclim
 
 " prevent auto commenting
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
