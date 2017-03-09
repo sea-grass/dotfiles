@@ -1,0 +1,3 @@
+function listne() {
+  echo -ne "\033c";sleep 1; echo hello; sleep 1; echo nice to see you again; sleep 2; echo how have you been?;read input; sleep 1; echo you\'ve been $input\?;sleep 1;echo yeah me too;sleep 1;echo i havent slept in so long;sleep 2;echo ...;sleep 2;echo what are you doing right now?; read input; sleep 1; echo wow get to fucking work you lazy
+}

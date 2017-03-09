@@ -5,7 +5,7 @@ alias [p="ls;pwd;jobs"
 alias ..="cd .. && pwd"
 
 # Refresh environment
-alias edb="vim ~/.bashrc ~/.bash/{aliases,env,config}; rlb"
+alias edb="vim ~/.bashrc ~/.bash/{aliases,env,config,goodies}; rlb"
 alias rlb="source ~/.bashrc && echo '~/.bashrc reloaded'"
 alias refresh_env="if [ \"x$DISPLAY\" != \"x\" ]; then xrdb -load ~/.Xresources; fi"
 
