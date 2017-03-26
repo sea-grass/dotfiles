@@ -11,3 +11,5 @@ START=`date +%s`
 END=`date +%s`
 
 echo ".bashrc took " $(($END-$START)) " seconds"
+VITASDK=/usr/local/vitasdk
+PATH="$VITASDK/bin:$PATH"
