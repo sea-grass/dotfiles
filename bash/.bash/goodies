@@ -1,0 +1,10 @@
+function listne() {
+  echo -ne "\033c";sleep 1; echo hello; sleep 1; echo nice to see you again; sleep 2; echo how have you been?;read input; sleep 1; echo you\'ve been $input\?;sleep 1;echo yeah me too;sleep 1;echo i havent slept in so long;sleep 2;echo ...;sleep 2;echo what are you doing right now?; read input; sleep 1; echo wow get to fucking work you lazy
+}
+
+function prompt_command() {
+  local prompt_history="$(history 1)"
+  prompt_history=${prompt_history:7}
+  echo -En $'\033[38;5;2m'"$prompt_history"$'\033[0m\n'
+}
+PROMPT_COMMAND=prompt_command
