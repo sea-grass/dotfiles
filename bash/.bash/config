@@ -3,11 +3,13 @@ warn=false
 #TODO: Add check for xterm, transset-df, xcompmgr first
 [ -n "$XTERM_VERSION" ] && transset-df -a >/dev/null
 
-VIRTUALENVWRAPPER=/usr/bin/virtualenvwrapper.sh
-if [ -a $VIRTUALENVWRAPPER ]
+VIRTUALENVWRAPPER=/usr/local/bin/virtualenvwrapper.sh
+if [ -e "$VIRTUALENVWRAPPER" ]
   then
-    source /usr/bin/virtualenvwrapper.sh
+    source "$VIRTUALENVWRAPPER"
     export WORKON_HOME=~/.virtualenvs
+  else
+    [[ "$warn" = true ]] && echo "WARNING: virtualenvwrapper.sh not found"
 fi
 
 PEBBLE_SDK_PATH=~/pebble-dev/pebble-sdk
