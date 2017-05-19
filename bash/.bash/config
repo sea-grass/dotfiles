@@ -140,3 +140,9 @@ else
 fi
 
 export PATH="$PATH"
+
+# Auto start tmux on ssh session
+
+if [[ -z "$TMUX" ]] && [ "$SSH_CONNECTION" != "" ]; then
+  tmux attach || tmux new
+fi
