@@ -1,1 +1,7 @@
+URxvt.termName: rxvt-unicode
+urxvt*transparent: true
+urxvt*shading: 30
+
+
 #include  "solarized-theme"
+#include "urxvt-powerline"
