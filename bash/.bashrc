@@ -8,9 +8,12 @@ START=`date +%s`
 . ~/.bash/env
 . ~/.bash/config
 . ~/.bash/goodies
+. ~/.bash/tools/tt.bash
 
 END=`date +%s`
 
 echo ".bashrc took " $(($END-$START)) " seconds"
 VITASDK=/usr/local/vitasdk
 PATH="$VITASDK/bin:$PATH"
+set mouse=a
+set ttymouse=xterm2
