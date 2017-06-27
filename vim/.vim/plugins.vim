@@ -7,9 +7,13 @@ Plug 'rosenfeld/conque-term'
 Plug 'pangloss/vim-javascript', { 'for': ['js', 'html'] }
 Plug 'JulesWang/css.vim', { 'for': ['css', 'html', 'js'] }
 Plug 'fatih/vim-go', { 'for': ['go'] }
+Plug 'StanAngeloff/php.vim', { 'for': ['php', 'html'] }
+Plug 'lumiliet/vim-twig', { 'for': ['php', 'html'] }
+Plug 'chase/vim-ansible-yaml', { 'for': ['yaml'] }
 
 Plug 'scrooloose/syntastic'
 "Plug 'starcraftman/vim-eclim'
+
 
 " Syntastic suggested settings
 set statusline+=%#warningmsg#
