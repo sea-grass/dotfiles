@@ -1,0 +1,3 @@
+tmux/.tmux/plugins/*
+vim/.vim/plugged
+vim/.vim/autoload
