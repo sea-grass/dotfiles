@@ -26,6 +26,9 @@ set shiftwidth=2
 " Highlight all search matches (:nohlsearch to turn off)
 set hlsearch
 
+" Tell vim that .ts files are Typescript
+autocmd BufNewFile,BufRead *.ts setlocal filetype=typescript
+
 " prevent auto commenting
 autocmd FileType * setlocal formatoptions-=c formatoptions-=r formatoptions-=o
 
