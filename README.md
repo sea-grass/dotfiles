@@ -19,8 +19,8 @@ Now, all of the commands added to this section will be run by the repo's `init.b
 Commands are executed in the following order:
 
 1. For all sections...
-  a. dir
-  b. link
+    1. dir
+    2. link
 
 ## Commands
 
@@ -28,10 +28,10 @@ Commands are executed in the following order:
 
 > Ensure the specified directory exists in `$HOME`.
 
-|---|---|
-|Extension|dir|
-|Contents|`dirname`|
-|---|---|
+|||
+|-|-|
+| **File extension** | dir |
+| **File contents** | `dirname` |
 
 To create a `dir` command for some section `foo` to create `~/.config/foo`:
 
@@ -44,11 +44,10 @@ echo "~/.config/foo" > dots/foo/conf.dir
 
 > Link the target somewhere in `$HOME`.
 
-
-|---|---|
-|Extension|dir|
-|Contents|`target->linkname`|
-|---|---|
+|||
+|-|-|
+| **File extension** | link |
+| **File contents** | `target->linkname` |
 
 To create a `link` command for some section `bash` to create a symlink for `.bashrc`:
 
