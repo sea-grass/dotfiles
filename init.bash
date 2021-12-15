@@ -50,6 +50,19 @@ link() {
   fi
 }
 
+download() {
+  [ $# -eq 2 ] || error "download requires 2 arguments"
+  url="$1"
+  destination_file="$2"
+
+  if [ -f "$destination_file" ]; then
+    info "download destination file \"$destination_file\" already exists. Not overwriting"
+  else
+    wget -O "$destination_file" "$url"
+  fi
+
+}
+
 # kitty
 for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
   for dir_command in $(find "$section" -type f -name '*.dir'); do
@@ -67,5 +80,14 @@ for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
     link_name="$HOME/${BASH_REMATCH[2]}"
     
     link "$target" "$link_name"
+  done
+  for download_command in $(find "$section" -type f -name '*.download'); do
+    pat='(.+)->~/(.+)'
+    download_data=$(head -1 "$download_command")
+    [[ "$download_data" =~ $pat ]] || error "download [$section/$download_command] has malformed contents"
+    url="${BASH_REMATCH[1]}"
+    destination_file="$HOME/${BASH_REMATCH[2]}"
+
+    download "$url" "$destination_file"
   done
 done

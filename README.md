@@ -21,6 +21,7 @@ Commands are executed in the following order:
 1. For all sections...
   a. dir
   b. link
+  c. download
 
 ## Commands
 
@@ -57,3 +58,12 @@ mkdir -p dots/bash
 touch dots/bash/bashrc
 echo "bashrc->~/.bashrc" > dots/bash/conf.link
 ```
+
+### `download`
+
+> Download the file and store it at the specified location
+
+|---|---|
+|Extension|download|
+|Contents|`url->destination_file`|
+|---|---|
