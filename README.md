@@ -29,10 +29,10 @@ Commands are executed in the following order:
 
 > Ensure the specified directory exists in `$HOME`.
 
-|---|---|
-|Extension|dir|
-|Contents|`dirname`|
-|---|---|
+|||
+|-|-|
+| **File extension** | dir |
+| **File contents** | `dirname` |
 
 To create a `dir` command for some section `foo` to create `~/.config/foo`:
 
@@ -45,11 +45,10 @@ echo "~/.config/foo" > dots/foo/conf.dir
 
 > Link the target somewhere in `$HOME`.
 
-
-|---|---|
-|Extension|dir|
-|Contents|`target->linkname`|
-|---|---|
+|||
+|-|-|
+| **File extension** | link |
+| **File contents** | `target->linkname` |
 
 To create a `link` command for some section `bash` to create a symlink for `.bashrc`:
 
