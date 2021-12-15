@@ -37,14 +37,14 @@ link() {
   info "link \"$target\" \"$link_name\""
   [ -a "$target" ] || error "target \"$target\" does not exist"
 
-  [ -f "$link_name" ] || error "link \"$link_name\" is a real file. Not overwriting"
-
   if [ -h "$link_name" ]; then
     if [ "$target" -ef "$link_name" ]; then
       verbose "link \"$link_name\" already exists"
     else
       error "link \"$link_name\" already exists but points to a different file. Not overwriting"
     fi
+  elif [ -f "$link_name" ]; then
+    error "link \"$link_name\" is a real file. Not overwriting"
   else
     ln -s "$target" "$link_name"
   fi
