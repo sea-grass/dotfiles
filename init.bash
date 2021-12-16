@@ -54,16 +54,29 @@ download() {
   [ $# -eq 2 ] || error "download requires 2 arguments"
   url="$1"
   destination_file="$2"
+  info "download $url -> $destination_file"
 
   if [ -f "$destination_file" ]; then
-    info "download destination file \"$destination_file\" already exists. Not overwriting"
+    verbose "download destination file \"$destination_file\" already exists. Not overwriting"
   else
     wget -O "$destination_file" "$url"
   fi
 
 }
 
-# kitty
+apt_install() {
+  [ $# -eq 1 ] || error "apt_install requires 1 argument"
+  package="$1"
+  info "apt_install $package"
+
+  if dpkg -s "$package" 2>/dev/null | grep -q "Package: $package"; then
+    verbose "apt_install package $package already installed. Nothing to do"
+  else
+    info "apt_install needs to install package $package. You may need to enter your password for sudo privilege"
+    sudo apt install "$package"
+  fi
+}
+
 for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
   for dir_command in $(find "$section" -type f -name '*.dir'); do
     pat='~/(.+)'
@@ -89,5 +102,11 @@ for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
     destination_file="$HOME/${BASH_REMATCH[2]}"
 
     download "$url" "$destination_file"
+  done
+  for apt_command in $(find "$section" -type f -name '*.apt'); do
+    apt_data=( $(cat "$apt_command") )
+    for package in $apt_data; do
+      apt_install "$package"
+    done
   done
 done
