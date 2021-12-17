@@ -1,5 +1,8 @@
+set nocompatible
 set nu expandtab tabstop=2 shiftwidth=2
 
-call plug#begin(stdpath('data') . '/plugged')
+runtime ./plug.vim
+runtime ./maps.vim
+runtime ./locals.vim
 
-call plug#end()
+colorscheme dracula
