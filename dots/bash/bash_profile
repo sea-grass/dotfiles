@@ -1,2 +1,1 @@
-source ~/.bash/rc.bash
-source ~/.bash/locals.bash
+source ~/.bashrc
