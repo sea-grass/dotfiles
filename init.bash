@@ -1,6 +1,5 @@
 #!/bin/bash
 # dotfiles/init.bash
-
 root=$(cd -- "$(dirname -- '${BASH_SOURCE[0]}')" &> /dev/null && pwd)
 dots="$root/dots"
 
@@ -104,9 +103,13 @@ for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
     download "$url" "$destination_file"
   done
   for apt_command in $(find "$section" -type f -name '*.apt'); do
-    apt_data=( $(cat "$apt_command") )
-    for package in $apt_data; do
-      apt_install "$package"
-    done
+    if ! { type apt-get 2>/dev/null; }; then
+      info "apt-get is not present on this system. Not installing dependencies for [$section/$apt_command]"
+    else
+      apt_data=( $(cat "$apt_command") )
+      for package in $apt_data; do
+        apt_install "$package"
+      done
+    fi
   done
 done
