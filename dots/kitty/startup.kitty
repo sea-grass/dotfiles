@@ -1,0 +1,5 @@
+new_tab vim
+launch -- bash -l -c nvim
+
+new_tab work
+launch bash
