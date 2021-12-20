@@ -14,8 +14,7 @@ Plug 'neoclide/coc.nvim', { 'branch': 'release' }
 
 Plug 'dracula/vim', { 'as': 'dracula' }
 
-Plug 'kyazdani42/nvim-web-devicons'
-Plug 'kyazdani42/nvim-tree.lua'
+Plug 'preservim/nerdtree'
 
 Plug 'tpope/vim-fugitive'
 
@@ -24,7 +23,5 @@ Plug 'vim-airline/vim-airline-themes'
 
 call plug#end()
 
-runtime ./plugins/devicons.rc.vim
-runtime ./plugins/nvim-tree.rc.vim
 runtime ./plugins/vim-airline.rc.vim
 runtime ./plugins/vimwiki.rc.vim

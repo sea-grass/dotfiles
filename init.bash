@@ -103,7 +103,7 @@ for section in $(find "$dots" -mindepth 1 -maxdepth 1 -type d); do
     download "$url" "$destination_file"
   done
   for apt_command in $(find "$section" -type f -name '*.apt'); do
-    if ! { type apt-get 2>/dev/null; }; then
+    if ! { type apt-get 1>/dev/null 2>&1; }; then
       info "apt-get is not present on this system. Not installing dependencies for [$section/$apt_command]"
     else
       apt_data=( $(cat "$apt_command") )

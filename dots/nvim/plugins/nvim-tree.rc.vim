@@ -1,6 +1,8 @@
 " kyazdani42/nvim-tree.lua
 " https://github.com/kyazdani42/nvim-tree.lua
 
+
+
 " Dictionary of buffer option names mapped to a list of option values that
 " indicates to the window picker that the buffer's window should not be
 " selectable.
@@ -42,4 +44,3 @@ set termguicolors " this variable must be enabled for colors to be applied prope
 
 " a list of groups can be found at `:help nvim_tree_highlight`
 "highlight NvimTreeFolderIcon guibg=blue
-

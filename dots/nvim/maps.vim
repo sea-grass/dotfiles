@@ -15,6 +15,7 @@ nnoremap <down> 10j<CR>
 " kyazdani42/nvim-tree.lua
 " https://github.com/kyazdani42/nvim-tree.lua
 
-nnoremap <C-n> :NvimTreeToggle<CR>
-nnoremap <leader>r :NvimTreeRefresh<CR>
-nnoremap <leader>n :NvimTreeFindFile<CR>
+nnoremap <C-n> :NERDTree<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <leader>r :NERDTreeRefreshRoot<CR>
+nnoremap <leader>n :NERDTreeFocus<CR>
