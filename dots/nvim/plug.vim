@@ -23,5 +23,5 @@ Plug 'vim-airline/vim-airline-themes'
 
 call plug#end()
 
-runtime ./plugins/vim-airline.rc.vim
-runtime ./plugins/vimwiki.rc.vim
+"runtime ./plugins/vim-airline.rc.vim
+"runtime ./plugins/vimwiki.rc.vim
