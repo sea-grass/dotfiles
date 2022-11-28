@@ -1,0 +1,11 @@
+[user]
+	name = sea-grass
+	email = dev.seagrass@gmail.com
+[alias]
+	co = checkout
+  fap = fetch --all --prune
+	s = status
+  watch = !watch -c git -c color.status=always s
+  w = watch
+[diff]
+	tool = smerge

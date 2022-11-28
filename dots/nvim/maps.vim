@@ -12,6 +12,11 @@ nnoremap <left> :bprev<CR>
 nnoremap <up> 10k<CR>
 nnoremap <down> 10j<CR>
 
+" Open fzf search, acknowledging .gitignore entries
+nnoremap ; :GFiles?<CR>
+" Use ? key to invoke a text search across files
+nnoremap ? :Rg<CR>
+
 " kyazdani42/nvim-tree.lua
 " https://github.com/kyazdani42/nvim-tree.lua
 
