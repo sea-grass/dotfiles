@@ -5,19 +5,19 @@ dots="$root/dots"
 
 error() {
   msg="$1"
-  printf "Error: %s\nExiting.\n" "$msg" >&2
+  printf "ERRO:\n\t%s\nExiting.\n" "$msg" >&2
   exit 1
 }
 
 info() {
   msg="$1"
-  printf "Info: %s\n" "$msg"
+  printf "Info:\n\t%s\n" "$msg"
 }
 
 verbose() {
   [ "$DOTS_VERBOSE" == "1" ] || return
   msg="$1"
-  printf "INFO: %s\n" "$msg"
+  printf "VERB:\n\t%s\n" "$msg"
 }
 
 direxists() {
