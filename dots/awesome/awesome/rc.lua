@@ -14,11 +14,13 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 local hotkeys_popup = require("awful.hotkeys_popup")
--- Various widgets
+--- Various widgets
 local volume_widget = require('awesome-wm-widgets.volume-widget.volume')
 local run_shell = require("awesome-wm-widgets.run-shell.run-shell")
 local net_speed_widget = require("awesome-wm-widgets.net-speed-widget.net-speed")
 local cpu_widget = require("awesome-wm-widgets.cpu-widget.cpu-widget")
+-- Helper for multiple monitors
+local xrandr = require("xrandr")
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
@@ -50,12 +52,13 @@ end
 
 -- {{{ Variable definitions
 -- Themes define colours, icons, font and wallpapers.
+beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
 local theme_path = string.format("%s/.config/awesome/themes/%s/theme.lua", os.getenv("HOME"), "default")
 beautiful.init(theme_path)
 
 -- This is used later as the default terminal and editor to run.
 terminal = "xterm"
-editor = os.getenv("EDITOR") or "nvim"
+editor = os.getenv("EDITOR") or "editor"
 editor_cmd = terminal .. " -e " .. editor
 
 -- Default modkey.
@@ -68,18 +71,18 @@ modkey = "Mod4"
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
     awful.layout.suit.tile,
-    -- awful.layout.suit.tile.left,
-    -- awful.layout.suit.tile.bottom,
-    -- awful.layout.suit.tile.top,
-    -- awful.layout.suit.fair,
-    -- awful.layout.suit.fair.horizontal,
+    awful.layout.suit.tile.left,
+    awful.layout.suit.tile.bottom,
+    awful.layout.suit.tile.top,
+    awful.layout.suit.fair,
+    awful.layout.suit.fair.horizontal,
     awful.layout.suit.spiral,
-    -- awful.layout.suit.spiral.dwindle,
+    awful.layout.suit.spiral.dwindle,
     awful.layout.suit.max,
     awful.layout.suit.floating,
-    -- awful.layout.suit.max.fullscreen,
-    -- awful.layout.suit.magnifier,
-    -- awful.layout.suit.corner.nw,
+    awful.layout.suit.max.fullscreen,
+    awful.layout.suit.magnifier,
+    awful.layout.suit.corner.nw,
     -- awful.layout.suit.corner.ne,
     -- awful.layout.suit.corner.sw,
     -- awful.layout.suit.corner.se,
@@ -96,10 +99,16 @@ myawesomemenu = {
    { "quit", function() awesome.quit() end },
 }
 
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
-                                    { "open terminal", terminal }
-                                  }
-                        })
+local menu_awesome = { "awesome", myawesomemenu, beautiful.awesome_icon }
+local menu_terminal = { "open terminal", terminal }
+
+mymainmenu = awful.menu({
+    items = {
+              menu_awesome,
+              menu_terminal,
+            }
+})
+
 
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
                                      menu = mymainmenu })
@@ -114,9 +123,6 @@ mykeyboardlayout = awful.widget.keyboardlayout()
 -- {{{ Wibar
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock()
-
--- Show a simple text message
-myfuck = wibox.widget.textbox("time")
 
 -- Create a wibox for each screen and add it
 local taglist_buttons = gears.table.join(
@@ -222,7 +228,6 @@ awful.screen.connect_for_each_screen(function(s)
             mykeyboardlayout,
             wibox.widget.systray(),
             mytextclock,
-            myfuck,
             cpu_widget({ width = 500 }),
             net_speed_widget({ width = 100 }),
             volume_widget(),
@@ -324,7 +329,7 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
     -- Prompt
-    --awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
+
     awful.key({modkey}, "r", function () run_shell.launch() end,
               {description = "run prompt", group = "launcher"}),
 
@@ -336,11 +341,13 @@ globalkeys = gears.table.join(
                     exe_callback = awful.util.eval,
                     history_path = awful.util.get_cache_dir() .. "/history_eval"
                   }
-              end, {description = "lua execute prompt", group = "awesome"}),
+              end,
+              {description = "lua execute prompt", group = "awesome"}),
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
               {description = "show the menubar", group = "launcher"}),
-    -- Keyboard hotkeys
+
+    -- Display brightness
     awful.key({ }, "XF86MonBrightnessDown",
         function ()
             awful.util.spawn("xbacklight -dec 15")
@@ -350,7 +357,12 @@ globalkeys = gears.table.join(
         function ()
             awful.util.spawn("xbacklight -inc 15")
         end,
-        {description = "Increase brightness of the screen backlight", group = "hardware"})
+        {description = "Increase brightness of the screen backlight", group = "hardware"}),
+
+
+    -- Multiple monitor support via hotkey
+    awful.key({ modkey }, ".", function() xrandr.xrandr() end,
+              {description = "next monitor screen arrangement", group = "hardware"})
 )
 
 clientkeys = gears.table.join(
@@ -588,4 +600,4 @@ client.connect_signal("focus", function(c) c.border_color = beautiful.border_foc
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
-awful.spawn.with_shell("~/.config/awesome/autorun.sh")
+--awful.spawn_with_shell("~/.config/awesome/autorun.sh")
