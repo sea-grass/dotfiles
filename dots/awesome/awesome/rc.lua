@@ -19,7 +19,6 @@ local volume_widget = require('awesome-wm-widgets.volume-widget.volume')
 local run_shell = require("awesome-wm-widgets.run-shell.run-shell")
 local net_speed_widget = require("awesome-wm-widgets.net-speed-widget.net-speed")
 local cpu_widget = require("awesome-wm-widgets.cpu-widget.cpu-widget")
-local batteryarc_widget = require("awesome-wm-widgets.batteryarc-widget.batteryarc")
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
@@ -227,7 +226,6 @@ awful.screen.connect_for_each_screen(function(s)
             cpu_widget({ width = 500 }),
             net_speed_widget({ width = 100 }),
             volume_widget(),
-            batteryarc_widget(),
             s.mylayoutbox,
         },
     }
