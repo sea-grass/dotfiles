@@ -2,10 +2,19 @@
 	name = sea-grass
 	email = dev.seagrass@gmail.com
 [alias]
-	co = checkout
-	fap = fetch --all --prune
-	s = status
+  cb = branch --show-current
 
+  # Fast switching between branches
+  co = !git checkout "$(git branch -a | sed '/^  remotes/d' | fzf)"
+  # Fast syncing with remotes
+  fap = fetch --all --prune
+
+  # Fast first push new branch to remote
+  firstpush = !git push --set-upstream origin "$(git branch --show-current)"
+  # alternatively just git push origin HEAD, but this doesn't attach it to the remote
+  mr = push origin HEAD
+
+	s = status
 
   cs = -c color.status=always s
   clog = -c color.ui=always log -3
@@ -15,6 +24,9 @@
 
 	watch = !watch -c git wall
 	w = watch
+
+  yesterday = !git log --all --author="$(git config --get user.name)" --since=yesterday
+  y = yesterday
 [diff]
 	tool = smerge
 [init]
