@@ -3,9 +3,19 @@
 	email = dev.seagrass@gmail.com
 [alias]
 	co = checkout
-  fap = fetch --all --prune
+	fap = fetch --all --prune
 	s = status
-  watch = !watch -c git -c color.status=always s
-  w = watch
+
+
+  cs = -c color.status=always s
+  clog = -c color.ui=always log -3
+
+
+  wall = !cat <(git cs) <(echo) <(echo "Latest commits...") <(git clog)
+
+	watch = !watch -c git wall
+	w = watch
 [diff]
 	tool = smerge
+[init]
+	defaultBranch = main
