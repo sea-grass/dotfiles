@@ -35,13 +35,13 @@ modify_font baseline -1.0
 map cmd+w no-op
 
 # resize windows
-map ctrl+alt+up resize_window taller
-map ctrl+alt+right resize_window wider
-map ctrl+alt+down resize_window shorter 3
-map ctrl+alt+left resize_window narrower
+map ctrl+up resize_window taller
+map ctrl+right resize_window wider
+map ctrl+down resize_window shorter 3
+map ctrl+left resize_window narrower
 
 
 # BEGIN_KITTY_THEME
-# Tokyo Night
+# Tomorrow
 include current-theme.conf
 # END_KITTY_THEME

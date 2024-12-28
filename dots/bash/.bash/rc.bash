@@ -11,5 +11,16 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# TODO: Move bash shell aliases to other config folders
 alias vim=nvim
+
+export PATH="$HOME/.bin:$PATH"
+
+function rlb {
+  source ~/.bashrc
+  echo "bashrc reloaded"
+}
+
+function edb {
+  vim ~/.bashrc ~/.bash/*
+  rlb
+}

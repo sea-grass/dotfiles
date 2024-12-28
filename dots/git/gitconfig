@@ -5,7 +5,7 @@
   cb = branch --show-current
 
   # Fast switching between branches
-  co = !git checkout "$(git branch -a | sed '/^  remotes/d' | fzf)"
+  co = !git checkout "$(git branch -a --sort=-committerdate | sed '/^  remotes/d' | fzf)"
   # Fast syncing with remotes
   fap = fetch --all --prune
 
@@ -27,6 +27,10 @@
   yesterday = !git log --all --author="$(git config --get user.name)" --since=yesterday
   y = yesterday
 [diff]
-	tool = smerge
+	tool = nvimdiff
 [init]
 	defaultBranch = main
+[difftool "nvimdiff"]
+	cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
+[difftool]
+	prompt = true
