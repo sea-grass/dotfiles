@@ -20,3 +20,7 @@ if nighttime
 else
   colorscheme tokyonight-day
 endif
+
+" keeps the terminal opacity of ghostty,
+" but gets rid of all syntax highlighting...
+" set notgc

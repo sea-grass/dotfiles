@@ -9,6 +9,7 @@ Plug 'earthly/earthly.vim', { 'branch': 'main' }
 
 Plug 'ziglang/zig.vim'
 Plug 'DingDean/wgsl.vim'
+Plug 'VaiN474/vim-etlua'
 
 Plug 'evanleck/vim-svelte'
 
