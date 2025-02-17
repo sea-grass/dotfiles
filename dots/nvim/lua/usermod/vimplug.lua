@@ -1,4 +1,15 @@
--- Plug adapter inspired by:
+-- Lua Plug adapter for vim-plug
+--
+-- Usage:
+-- ```
+-- Plug.begin()
+--
+-- Plug 'vimwiki/vimwiki'
+--
+-- Plug.ends()
+-- ```
+--
+-- Inspired by:
 -- @see https://dev.to/vonheikemen/neovim-using-vim-plug-in-lua-3oom
 
 local configs = {

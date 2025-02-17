@@ -1,6 +1,9 @@
 local vim = vim or {}
 local Plug = require 'usermod.vimplug'
 
+-- Print the message of the moment
+require 'usermod.ollama'
+
 local loadPlugins = function()
   Plug.begin()
 
@@ -23,11 +26,11 @@ local loadPlugins = function()
 
   Plug 'pangloss/vim-javascript'
   Plug 'HerringtonDarkholme/yats.vim'
-  Plug( 'mattn/emmet-vim', {
-    config = function()
-      vim.cmd.runtime('./plugins/emmet-vim.rc.vim')
-    end,
-  })
+  --Plug( 'mattn/emmet-vim', {
+    --config = function()
+      --vim.cmd.runtime('./plugins/emmet-vim.rc.vim')
+    --end,
+  --})
 
   Plug 'habamax/vim-godot'
   Plug('neoclide/coc.nvim', {
@@ -60,21 +63,65 @@ local loadPlugins = function()
 
   Plug 'tpope/vim-fugitive'
 
-  Plug('vim-airline/vim-airline', {
-    config = function()
-      vim.cmd([[
-      let g:airline_theme='lucius'
-      let g:airline#extensions#wordcount#filetypes = '\vwiki|md|txt'
-      set laststatus=2 " enables vim-airline
-      ]])
-    end,
-  })
-  Plug 'vim-airline/vim-airline-themes'
-
   Plug 'tpope/vim-repeat'
   Plug('ggandor/leap.nvim', {
     config = function()
       vim.cmd.runtime('./plugins/leap.rc.lua')
+    end,
+  })
+
+  Plug 'mhinz/vim-startify'
+
+  Plug('nvim-lualine/lualine.nvim', {
+    config = function()
+      require('lualine').setup {
+        options = {
+          icons_enabled = true,
+          theme = 'dracula',
+          component_separators = { left = '', right = ''},
+          section_separators = { left = '', right = ''},
+          disabled_filetypes = {
+            statusline = {},
+            winbar = {},
+          },
+          ignore_focus = {},
+          always_divide_middle = true,
+          always_show_tabline = true,
+          globalstatus = false,
+          refresh = {
+            statusline = 100,
+            tabline = 100,
+            winbar = 100,
+          }
+        },
+        sections = {
+          lualine_a = {'mode'},
+          lualine_b = {'branch', 'diff', 'diagnostics'},
+          lualine_c = {'filename'},
+          lualine_x = {'encoding', 'fileformat', 'filetype'},
+          lualine_y = {'progress'},
+          lualine_z = {'location'}
+        },
+        inactive_sections = {
+          lualine_a = {},
+          lualine_b = {},
+          lualine_c = {'filename'},
+          lualine_x = {'location'},
+          lualine_y = {},
+          lualine_z = {}
+        },
+        tabline = {},
+        winbar = {},
+        inactive_winbar = {},
+        extensions = {}
+      }
+    end,
+  })
+  Plug 'nvim-tree/nvim-web-devicons'
+
+  Plug('DanilaMihailov/beacon.nvim', {
+    config = function()
+      require('beacon').setup()
     end,
   })
 
@@ -139,5 +186,4 @@ end))
 loadPlugins()
 loadMaps()
 loadLocals()
-
-vim.cmd.colorscheme('dracula')
+vim.cmd.colorscheme "zaibatsu"
