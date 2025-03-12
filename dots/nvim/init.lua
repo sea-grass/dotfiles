@@ -189,4 +189,9 @@ end))
 loadPlugins()
 loadMaps()
 loadLocals()
-vim.cmd.colorscheme "onelight"
+-- orangeish
+vim.cmd.colorscheme "desert"
+-- light
+vim.cmd.colorscheme "zellner"
+-- dark
+vim.cmd.colorscheme "slate"
