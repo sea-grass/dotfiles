@@ -52,9 +52,6 @@ local loadPlugins = function()
     end,
   })
 
-  Plug('dracula/vim', { as= 'dracula' })
-  Plug('folke/tokyonight.nvim', { as= 'tokyonight' })
-
   Plug('preservim/nerdtree', {
     config = function()
       vim.cmd.runtime('./plugins/nerdtree.rc.vim')
@@ -125,6 +122,12 @@ local loadPlugins = function()
     end,
   })
 
+  -- Themes
+  Plug "olimorris/onedarkpro.nvim"
+  Plug('dracula/vim', { as= 'dracula' })
+  Plug('folke/tokyonight.nvim', { as= 'tokyonight' })
+
+
   Plug.ends()
 end
 
@@ -186,4 +189,4 @@ end))
 loadPlugins()
 loadMaps()
 loadLocals()
-vim.cmd.colorscheme "zaibatsu"
+vim.cmd.colorscheme "onelight"
