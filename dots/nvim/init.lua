@@ -7,7 +7,9 @@ require 'usermod.ollama'
 local loadPlugins = function()
   Plug.begin()
 
-  Plug('vimwiki/vimwiki', {
+  --Plug('sea-grass/vimwiki', {
+  Plug('~/code/vimwiki', {
+    as = 'vimwiki/vimwiki',
     config = function()
       vim.cmd([[
       let g:vimwiki_list = [{'path': '~/vimwiki', 'path_html': '~/vimwiki_html'}]
@@ -126,6 +128,7 @@ local loadPlugins = function()
   Plug "olimorris/onedarkpro.nvim"
   Plug('dracula/vim', { as= 'dracula' })
   Plug('folke/tokyonight.nvim', { as= 'tokyonight' })
+
 
 
   Plug.ends()
