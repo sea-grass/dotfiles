@@ -127,6 +127,7 @@ local loadPlugins = function()
   Plug('dracula/vim', { as= 'dracula' })
   Plug('folke/tokyonight.nvim', { as= 'tokyonight' })
 
+  Plug('hashivim/vim-terraform')
 
   Plug.ends()
 end
