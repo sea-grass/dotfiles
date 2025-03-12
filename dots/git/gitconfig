@@ -34,3 +34,5 @@
 	cmd = nvim -d \"$LOCAL\" \"$REMOTE\"
 [difftool]
 	prompt = true
+[core]
+	excludesFile = ~/.gitignore
