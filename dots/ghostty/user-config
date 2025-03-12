@@ -7,6 +7,6 @@ background-opacity = 1
 theme = light:AtomOneLight,dark:Adventure
 
 #custom-shader = ~/code/ghostty-shaders/bettercrt.glsl
-#custom-shader = ~/code/ghostty-shaders/starfield-colors.glsl
+custom-shader = ~/code/ghostty-shaders/starfield-colors.glsl
 #custom-shader = ~/code/ghostty-shaders/just-snow.glsl
-#custom-shader = ~/code/ghostty-shaders/underwater.glsl
+custom-shader = ~/code/ghostty-shaders/underwater.glsl
