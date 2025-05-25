@@ -1,6 +1,10 @@
 const std = @import("std");
 const mem = std.mem;
 
+pub const std_options: std.Options = .{
+    .log_level = .debug,
+};
+
 pub fn main() !void {
     var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
@@ -37,8 +41,6 @@ const AppOptions = struct {
 };
 
 pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
-    _ = allocator;
-
     if (std.mem.eql(u8, "direxists", options.command)) {
         try direxists(options.args);
     } else if (std.mem.eql(u8, "link", options.command)) {
@@ -47,6 +49,12 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         const link_name = it.next() orelse return error.MissingLinkArgument;
 
         try link(target, link_name);
+    } else if (std.mem.eql(u8, options.command, "download")) {
+        var it = std.mem.splitScalar(u8, options.args, ' ');
+        const url = it.next() orelse return error.MissingLinkArgument;
+        const destination_file = it.next() orelse return error.MissingLinkArgument;
+
+        try download(allocator, url, destination_file);
     }
 }
 
@@ -72,4 +80,53 @@ fn link(target: []const u8, link_name: []const u8) !void {
         error.PathAlreadyExists => {},
         else => return err,
     };
+}
+
+fn download(allocator: mem.Allocator, url: []const u8, destination_file: []const u8) !void {
+    std.log.info("download {s} -> {s}", .{ url, destination_file });
+
+    if (!std.fs.path.isAbsolute(destination_file)) return error.InvalidDownloadArgument;
+
+    const exists: bool = exists: {
+        std.fs.accessAbsolute(destination_file, .{}) catch |err| switch (err) {
+            error.FileNotFound => break :exists false,
+            else => return err,
+        };
+
+        break :exists true;
+    };
+    if (exists) {
+        std.log.debug("download destination file \"{s}\" already exists. Not overwriting.", .{destination_file});
+    } else {
+        //
+
+        var arena: std.heap.ArenaAllocator = .init(allocator);
+        defer arena.deinit();
+
+        var client: std.http.Client = .{ .allocator = arena.allocator() };
+
+        var header_buf: [4096]u8 = undefined;
+        var request = try client.open(.GET, try std.Uri.parse(url), .{
+            .server_header_buffer = &header_buf,
+        });
+        defer request.deinit();
+
+        try request.send();
+        try request.finish();
+        try request.wait();
+
+        switch (request.response.status) {
+            .ok => {},
+            else => return error.UnexpectedResponseStatus,
+        }
+
+        const max_body_size: usize = 10 * 1024 * 1024;
+        var body_buf: [max_body_size]u8 = undefined;
+
+        const len = try request.readAll(&body_buf);
+
+        var file = try std.fs.createFileAbsolute(destination_file, .{});
+        defer file.close();
+        try file.writeAll(body_buf[0..len]);
+    }
 }

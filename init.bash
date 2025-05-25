@@ -20,20 +20,6 @@ verbose() {
   printf "VERB:\n\t%s\n" "$msg"
 }
 
-download() {
-  [ $# -eq 2 ] || error "download requires 2 arguments"
-  url="$1"
-  destination_file="$2"
-  info "download $url -> $destination_file"
-
-  if [ -f "$destination_file" ]; then
-    verbose "download destination file \"$destination_file\" already exists. Not overwriting"
-  else
-    wget -O "$destination_file" "$url"
-  fi
-
-}
-
 apt_install() {
   [ $# -eq 1 ] || error "apt_install requires 1 argument"
   package="$1"
@@ -47,7 +33,10 @@ apt_install() {
   fi
 }
 
-zig build cmd
+zig build cmd -freference-trace=11
+if ! zig build cmd; then
+  error "Could not build cmd"
+fi
 cmd="./zig-out/bin/cmd"
 
 while IFS= read -r -d '' section; do
@@ -81,8 +70,8 @@ while IFS= read -r -d '' section; do
     url="${BASH_REMATCH[1]}"
     destination_file="$HOME/${BASH_REMATCH[2]}"
 
-    download "$url" "$destination_file"
-  done < <(find "$section" -type f -name '*.download')
+    "$cmd" download "$url" "$destination_file"
+  done < <(find "$section" -type f -name '*.download' -print0)
 
   while IFS= read -r -d '' apt_command; do
     if ! { type apt-get 1>/dev/null 2>&1; }; then
