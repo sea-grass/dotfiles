@@ -1,5 +1,6 @@
 const std = @import("std");
 const mem = std.mem;
+const log = std.log.scoped(.cmd);
 
 pub const std_options: std.Options = .{
     .log_level = .debug,
@@ -10,11 +11,16 @@ pub const std_options: std.Options = .{
             comptime format: []const u8,
             args: anytype,
         ) void {
+            const scoped = switch (scope) {
+                .default => format,
+                .section => "\n# Install dots section " ++ format,
+                .link, .download, .direxists => "> " ++ @tagName(scope) ++ " " ++ format,
+                else => @tagName(scope) ++ " " ++ format,
+            };
+
             const tmpl = switch (message_level) {
-                else => switch (scope) {
-                    .default => comptime message_level.asText() ++ " " ++ format ++ "\n",
-                    else => comptime message_level.asText() ++ " " ++ @tagName(scope) ++ " " ++ format ++ "\n",
-                },
+                .info => scoped ++ "\n",
+                else => comptime message_level.asText() ++ " " ++ scoped ++ "\n",
             };
 
             std.io.getStdOut().writer().print(tmpl, args) catch {};
@@ -57,7 +63,7 @@ const App = struct {
         if (Command.parse(command)) |cmd| {
             try cmd.dispatch(app.allocator, args);
         } else {
-            std.log.err("Invalid command [{s}]", .{command});
+            log.err("Invalid command [{s}]", .{command});
             return error.InvalidCommand;
         }
     }
@@ -142,6 +148,7 @@ const Command = enum {
     }
 
     fn _installDotsSection(allocator: mem.Allocator, args: []const u8) !void {
+        std.log.scoped(.section).info("{s}", .{std.fs.path.basename(args)});
         var it: FilterIterator = try .all(allocator, args);
 
         const apt_is_available = try isAptGetPresent();
@@ -160,7 +167,7 @@ const Command = enum {
                     try Command.apt_install.dispatch(allocator, args);
                 } else {
                     if (!apt_message_printed) {
-                        std.log.info("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
+                        log.warn("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
                             std.fs.path.basename(args),
                         });
                         apt_message_printed = true;
@@ -379,7 +386,7 @@ const Action = struct {
     }
 
     fn direxists(abs_path: []const u8) !void {
-        std.log.info("direxists {s}", .{abs_path});
+        std.log.scoped(.direxists).info("{s}", .{abs_path});
         std.fs.makeDirAbsolute(abs_path) catch |err| switch (err) {
             error.PathAlreadyExists => {},
             else => return err,
@@ -387,9 +394,8 @@ const Action = struct {
     }
 
     fn link(target: []const u8, link_name: []const u8) !void {
-        std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
+        std.log.scoped(.link).info("{s}", .{link_name});
         if (!std.fs.path.isAbsolute(target)) return error.InvalidLinkArgument;
-        std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
 
         const stat = try std.fs.cwd().statFile(target);
         const flags: std.fs.Dir.SymLinkFlags = .{ .is_directory = stat.kind == .directory };
@@ -404,7 +410,7 @@ const Action = struct {
     }
 
     fn download(allocator: mem.Allocator, url: []const u8, destination_file: []const u8) !void {
-        std.log.info("download {s} -> {s}", .{ url, destination_file });
+        std.log.scoped(.download).info("{s}", .{url});
 
         if (!std.fs.path.isAbsolute(destination_file)) return error.InvalidDownloadArgument;
 
@@ -417,7 +423,7 @@ const Action = struct {
             break :exists true;
         };
         if (exists) {
-            std.log.debug("download destination file \"{s}\" already exists. Not overwriting.", .{destination_file});
+            std.log.scoped(.download).info("+ already exists {s}", .{destination_file});
         } else {
             //
 
@@ -449,6 +455,8 @@ const Action = struct {
             var file = try std.fs.createFileAbsolute(destination_file, .{});
             defer file.close();
             try file.writeAll(body_buf[0..len]);
+
+            std.log.scoped(.download).info("+ saved to {s}", .{destination_file});
         }
     }
 };
