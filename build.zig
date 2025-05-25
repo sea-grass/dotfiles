@@ -6,7 +6,8 @@ const WriteFile = std.Build.Step.WriteFile;
 pub fn build(b: *std.Build) void {
     const bs = .{
         .cmd = b.step("cmd", "Build cmd"),
-        .install_dots = b.step("install_dots", "Install all sections in the dots folder."),
+        .install_dots = b.step("install_dots", "Install all sections in the dots folder"),
+        .@"test" = b.step("test", "Run unit tests"),
     };
 
     const target = b.standardTargetOptions(.{});
@@ -28,4 +29,14 @@ pub fn build(b: *std.Build) void {
     install_dots.addArg("install_dots");
     install_dots.addDirectoryArg(b.path("dots"));
     bs.install_dots.dependOn(&install_dots.step);
+
+    const tests = b.addTest(.{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const run_tests = b.addRunArtifact(tests);
+
+    bs.@"test".dependOn(&run_tests.step);
 }

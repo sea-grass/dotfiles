@@ -25,3 +25,15 @@ pub fn matchExt(file_path: []const u8, ext: []const u8, allow_exact: bool) bool 
 
 const std = @import("std");
 const mem = std.mem;
+
+test {
+    try std.testing.expect(
+        matchExt("test.txt", "txt", false),
+    );
+    try std.testing.expect(
+        !matchExt(".txt", "txt", false),
+    );
+    try std.testing.expect(
+        matchExt(".txt", "txt", true),
+    );
+}
