@@ -230,10 +230,11 @@ const FilterIterator = struct {
                 @memcpy(ext_with_dot_buf[1 .. 1 + match_ext.ext.len], match_ext.ext);
                 const ext_with_dot: []const u8 = ext_with_dot_buf[0 .. 1 + match_ext.ext.len];
 
-                if (!std.mem.endsWith(u8, entry.name, ext_with_dot)) return false;
-                if (!match_ext.allow_exact and entry.name.len == ext_with_dot.len) return false;
-
-                return true;
+                return switch (std.math.order(entry.name.len, ext_with_dot.len)) {
+                    .lt => false,
+                    .eq => match_ext.allow_exact and mem.eql(u8, entry.name, ext_with_dot),
+                    .gt => mem.endsWith(u8, entry.name, ext_with_dot),
+                };
             },
         }
     }
