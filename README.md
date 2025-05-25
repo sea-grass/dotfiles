@@ -1,6 +1,6 @@
 # dotfiles
 
-Run `init.bash` to run all commands for all sections inside the [dots](./dots) folder.
+Run `zig build install_dots` to run all commands for all sections inside the [dots](./dots) folder.
 
 ## Sections
 
@@ -12,7 +12,7 @@ To add a new section, create a new folder inside [./dots](./dots):
 mkdir dots/bash
 ```
 
-Now, all of the commands added to this section will be run by the repo's `init.bash` script.
+Now, all of the commands added to this section will be run by the repo's `src/cmd.zig` script.
 
 ## Command Execution
 
