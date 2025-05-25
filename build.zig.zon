@@ -1,0 +1,12 @@
+.{
+    .name = .dotfiles,
+    .version = "0.0.0",
+    .fingerprint = 0x1cd9b5b7d172a692,
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "dots",
+    },
+}

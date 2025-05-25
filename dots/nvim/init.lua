@@ -129,6 +129,7 @@ local loadPlugins = function()
   Plug('dracula/vim', { as= 'dracula' })
   Plug('folke/tokyonight.nvim', { as= 'tokyonight' })
 
+  Plug('hashivim/vim-terraform')
 
 
   Plug.ends()
@@ -192,4 +193,9 @@ end))
 loadPlugins()
 loadMaps()
 loadLocals()
-vim.cmd.colorscheme "onelight"
+-- orangeish
+vim.cmd.colorscheme "desert"
+-- light
+vim.cmd.colorscheme "zellner"
+-- dark
+vim.cmd.colorscheme "slate"
