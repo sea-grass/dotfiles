@@ -68,35 +68,41 @@ const Command = enum {
         return null;
     }
 
+    fn _link(args: []const u8) !void {
+        var it = std.mem.splitScalar(u8, args, ' ');
+        const target = it.next() orelse return error.MissingLinkArgument;
+        const link_name = it.next() orelse return error.MissingLinkArgument;
+
+        try link(target, link_name);
+    }
+
+    fn _download(allocator: mem.Allocator, args: []const u8) !void {
+        var it = std.mem.splitScalar(u8, args, ' ');
+        const url = it.next() orelse return error.MissingLinkArgument;
+        const destination_file = it.next() orelse return error.MissingLinkArgument;
+
+        try download(allocator, url, destination_file);
+    }
+
+    fn _installDotsSection(allocator: mem.Allocator, args: []const u8) !void {
+        try Command.@"all:direxists".dispatch(allocator, args);
+        try Command.@"all:link".dispatch(allocator, args);
+        try Command.@"all:download".dispatch(allocator, args);
+        try Command.@"all:apt_install".dispatch(allocator, args);
+    }
+
     pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
         switch (command) {
             .direxists => try direxists(args),
-            .link => {
-                var it = std.mem.splitScalar(u8, args, ' ');
-                const target = it.next() orelse return error.MissingLinkArgument;
-                const link_name = it.next() orelse return error.MissingLinkArgument;
-
-                try link(target, link_name);
-            },
-            .download => {
-                var it = std.mem.splitScalar(u8, args, ' ');
-                const url = it.next() orelse return error.MissingLinkArgument;
-                const destination_file = it.next() orelse return error.MissingLinkArgument;
-
-                try download(allocator, url, destination_file);
-            },
+            .link => try _link(args),
+            .download => try _download(allocator, args),
             .apt_install => try aptInstall(allocator, args),
             .@"all:direxists" => try allDirExists(allocator, args),
             .@"all:link" => try allLink(allocator, args),
             .@"all:download" => try allDownload(allocator, args),
             .@"all:apt_install" => try allAptInstall(allocator, args),
             .install_dots => try installDots(allocator, args),
-            .install_dots_section => {
-                try Command.@"all:direxists".dispatch(allocator, args);
-                try Command.@"all:link".dispatch(allocator, args);
-                try Command.@"all:download".dispatch(allocator, args);
-                try Command.@"all:apt_install".dispatch(allocator, args);
-            },
+            .install_dots_section => try _installDotsSection(allocator, args),
         }
     }
 };
