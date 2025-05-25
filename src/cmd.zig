@@ -28,16 +28,22 @@ pub fn main() !void {
 
     var root = std.fs.cwd();
 
-    try app(
-        allocator,
-        .{ .root = &root, .command = command, .args = rest_args.items },
-    );
+    const app: App = .{ .allocator = allocator, .root = &root };
+    try app.run(command, rest_args.items);
 }
 
-const AppOptions = struct {
+const App = struct {
     root: *std.fs.Dir,
-    command: []const u8,
-    args: []const u8,
+    allocator: mem.Allocator,
+
+    pub fn run(app: *const App, command: []const u8, args: []const u8) !void {
+        if (Command.parse(command)) |cmd| {
+            try cmd.dispatch(app.allocator, args);
+        } else {
+            std.log.err("Invalid command [{s}]", .{command});
+            return error.InvalidCommand;
+        }
+    }
 };
 
 const Command = enum {
@@ -94,15 +100,6 @@ const Command = enum {
         }
     }
 };
-
-pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
-    const command = Command.parse(options.command) orelse {
-        std.log.err("Invalid command [{s}]", .{options.command});
-        return error.InvalidCommand;
-    };
-
-    try command.dispatch(allocator, options.args);
-}
 
 fn installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
     var dir = try std.fs.openDirAbsolute(dots_path, .{ .iterate = true });
