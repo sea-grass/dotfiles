@@ -110,7 +110,8 @@ const Command = enum {
 const FilterIterator = struct {
     arena: std.heap.ArenaAllocator,
     path: []const u8,
-    dir: std.fs.Dir,
+    /// Once initialized, this root_dir is never reassigned.
+    root_dir: std.fs.Dir,
     it: std.fs.Dir.Iterator,
     /// state enum supports automatic deinit for the iterator.
     /// The caller may assume that if the iterator returned null,
@@ -122,14 +123,40 @@ const FilterIterator = struct {
     pub const Entry = struct {
         name: []const u8,
         realpath: []const u8,
+
+        /// Caller owns the returned memory.
+        pub fn content(entry: Entry, allocator: mem.Allocator) ![]const u8 {
+            return try std.fs.cwd().readFileAlloc(
+                allocator,
+                entry.realpath,
+                std.math.maxInt(usize),
+            );
+        }
     };
 
     pub const Match = union(enum) {
+        /// Pass through all files
         all: void,
+        /// Pass through only files which match the extension
+        match_ext: struct {
+            /// If true, Will also pass through files with the name `.ext`
+            /// If false, will only pass through files that match the regex `(.+)\.ext`
+            allow_exact: bool,
+            ext: []const u8,
+        },
     };
 
     pub fn all(allocator: mem.Allocator, abs_path: []const u8) !FilterIterator {
         return try init(allocator, abs_path, .all);
+    }
+
+    pub fn ext(allocator: mem.Allocator, abs_path: []const u8, file_ext: []const u8) !FilterIterator {
+        return try init(allocator, abs_path, .{
+            .match_ext = .{
+                .allow_exact = false,
+                .ext = file_ext,
+            },
+        });
     }
 
     pub fn init(allocator: mem.Allocator, abs_path: []const u8, match: Match) !FilterIterator {
@@ -139,7 +166,7 @@ const FilterIterator = struct {
         return .{
             .arena = std.heap.ArenaAllocator.init(allocator),
             .path = abs_path,
-            .dir = dir,
+            .root_dir = dir,
             .it = dir.iterate(),
             .state = .init,
             .match = match,
@@ -149,12 +176,12 @@ const FilterIterator = struct {
     pub fn deinit(it: *FilterIterator) void {
         switch (it.state) {
             .init, .done => {
-                it.dir.close();
+                it.root_dir.close();
                 it.arena.deinit();
                 it.state = .deinit;
             },
             .fatal => {
-                it.dir.close();
+                it.root_dir.close();
                 it.arena.deinit();
                 it.state = .fatal_deinit;
             },
@@ -185,9 +212,23 @@ const FilterIterator = struct {
     /// Internal function to return the next entry.
     fn _next(it: *FilterIterator) !?Entry {
         const entry = try it.it.next() orelse return null;
+
+        switch (it.match) {
+            .all => {},
+            .match_ext => |match_ext| {
+                var ext_with_dot_buf: [std.fs.max_path_bytes]u8 = undefined;
+                ext_with_dot_buf[0] = '.';
+                @memcpy(ext_with_dot_buf[1 .. 1 + match_ext.ext.len], match_ext.ext);
+                const ext_with_dot: []const u8 = ext_with_dot_buf[0 .. 1 + match_ext.ext.len];
+
+                if (!std.mem.endsWith(u8, entry.name, ext_with_dot)) return it._next();
+                if (!match_ext.allow_exact and entry.name.len == ext_with_dot.len) return it._next();
+            },
+        }
+
         return .{
             .name = try it.arena.allocator().dupe(u8, entry.name),
-            .realpath = try it.dir.realpathAlloc(it.arena.allocator(), entry.name),
+            .realpath = try it.root_dir.realpathAlloc(it.arena.allocator(), entry.name),
         };
     }
 };
@@ -220,22 +261,16 @@ fn isAptGetPresent() !bool {
 }
 
 fn allAptInstall(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = ".apt";
+    const ext = "apt";
 
     if (!try isAptGetPresent()) {
         std.log.info("apt-get is not present on this system. Not installing dependencies for [{s}]", .{section_path});
         return;
     }
 
-    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
-    defer dir.close();
-
-    var it = dir.iterate();
+    var it: FilterIterator = try .ext(allocator, section_path, ext);
     while (try it.next()) |entry| {
-        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
-        if (entry.name.len == ext.len) continue;
-
-        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        const content = try entry.content(allocator);
         defer allocator.free(content);
 
         var line_it = std.mem.splitScalar(u8, content, '\n');
@@ -248,17 +283,11 @@ fn allAptInstall(allocator: mem.Allocator, section_path: []const u8) !void {
 }
 
 fn allDownload(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = ".download";
+    const ext = "download";
 
-    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
-    defer dir.close();
-
-    var it = dir.iterate();
+    var it: FilterIterator = try .ext(allocator, section_path, ext);
     while (try it.next()) |entry| {
-        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
-        if (entry.name.len == ext.len) continue;
-
-        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        const content = try entry.content(allocator);
         defer allocator.free(content);
 
         const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
@@ -290,17 +319,11 @@ fn allDownload(allocator: mem.Allocator, section_path: []const u8) !void {
 }
 
 fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = ".link";
+    const ext = "link";
+    var it: FilterIterator = try .ext(allocator, section_path, ext);
 
-    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
-    defer dir.close();
-
-    var it = dir.iterate();
     while (try it.next()) |entry| {
-        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
-        if (entry.name.len == ext.len) continue;
-
-        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        const content = try entry.content(allocator);
         defer allocator.free(content);
 
         const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
@@ -323,7 +346,7 @@ fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
             const link_name_owned: []const u8 = try std.fs.path.join(allocator, &.{ home, link_name[2..] });
             errdefer allocator.free(link_name_owned);
 
-            const target_owned = try dir.realpathAlloc(allocator, target);
+            const target_owned = try it.root_dir.realpathAlloc(allocator, target);
             errdefer allocator.free(target_owned);
 
             break :input .{ target_owned, link_name_owned };
@@ -336,30 +359,28 @@ fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
 }
 
 fn allDirExists(allocator: mem.Allocator, section_path: []const u8) !void {
-    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
-    defer dir.close();
+    const ext = "dir";
+    var it: FilterIterator = try .ext(allocator, section_path, ext);
 
-    var it = dir.iterate();
     while (try it.next()) |entry| {
-        if (entry.name.len > 4 and std.mem.endsWith(u8, entry.name, ".dir")) {
-            var buf: [std.fs.max_path_bytes]u8 = undefined;
-            const content = try dir.readFile(entry.name, &buf);
-            const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
-                content[0..end]
-            else
-                content;
+        const content = try entry.content(allocator);
+        defer allocator.free(content);
 
-            if (line.len > 2 and std.mem.startsWith(u8, line, "~/")) {
-                const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
-                defer allocator.free(home);
+        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
+            content[0..end]
+        else
+            content;
 
-                const path: []const u8 = try std.fs.path.join(allocator, &.{ home, line[2..] });
-                defer allocator.free(path);
+        if (line.len > 2 and std.mem.startsWith(u8, line, "~/")) {
+            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+            defer allocator.free(home);
 
-                try direxists(path);
-            } else {
-                return error.InvalidDirexistsContent;
-            }
+            const path: []const u8 = try std.fs.path.join(allocator, &.{ home, line[2..] });
+            defer allocator.free(path);
+
+            try direxists(path);
+        } else {
+            return error.InvalidDirexistsContent;
         }
     }
 }
