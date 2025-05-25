@@ -1,2 +1,20 @@
-#config-file = "./default-config"
-config-file = "./user-config"
+background-opacity = 0.95
+font-family = TX-02
+font-size = 19
+font-thicken = true
+keybind = super+t=new_tab
+keybind = global:super+grave_accent=toggle_quick_terminal
+link-url = true
+quick-terminal-animation-duration = 0
+theme = ayu
+window-inherit-working-directory = true
+window-inherit-font-size = true
+clipboard-trim-trailing-spaces = true
+mouse-hide-while-typing = true
+window-theme = system
+macos-titlebar-proxy-icon = hidden
+macos-icon = custom-style
+macos-icon-frame = plastic
+macos-icon-ghost-color = FFFFFF
+macos-icon-screen-color = 000000
+theme = light:Monokai Pro Light,dark:Monokai Pro
