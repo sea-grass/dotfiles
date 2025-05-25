@@ -35,19 +35,14 @@ pub fn build(b: *std.Build) void {
 
 const nvim = struct {
     pub fn dots(wf: *WriteFile) void {
-        write(wf, @"init.lua", ".config/nvim/init.lua");
-        write(wf, @"locals.lua", ".config/nvim/locals.lua");
+        inline for (&.{
+            .{ "dots/nvim/coc-settings.json", ".config/nvim/coc-settings.json" },
+            .{ "dots/nvim/init.lua", ".config/nvim/init.lua" },
+        }) |entry| {
+            const file_path, const out_path = entry;
+            write(wf, @embedFile(file_path), out_path);
+        }
     }
-
-    pub const @"init.lua" =
-        \\
-    ;
-
-    pub const @"locals.lua" =
-        \\-- Machine-specific config goes here.
-        \\-- Note that changes here will not be committed to
-        \\-- version control.
-    ;
 };
 
 fn write(wf: *WriteFile, bytes: []const u8, sub_path: []const u8) void {
