@@ -213,23 +213,29 @@ const FilterIterator = struct {
     fn _next(it: *FilterIterator) !?Entry {
         const entry = try it.it.next() orelse return null;
 
+        if (!it.matches(entry)) return it._next();
+
+        return .{
+            .name = try it.arena.allocator().dupe(u8, entry.name),
+            .realpath = try it.root_dir.realpathAlloc(it.arena.allocator(), entry.name),
+        };
+    }
+
+    fn matches(it: *FilterIterator, entry: std.fs.Dir.Entry) bool {
         switch (it.match) {
-            .all => {},
+            .all => return true,
             .match_ext => |match_ext| {
                 var ext_with_dot_buf: [std.fs.max_path_bytes]u8 = undefined;
                 ext_with_dot_buf[0] = '.';
                 @memcpy(ext_with_dot_buf[1 .. 1 + match_ext.ext.len], match_ext.ext);
                 const ext_with_dot: []const u8 = ext_with_dot_buf[0 .. 1 + match_ext.ext.len];
 
-                if (!std.mem.endsWith(u8, entry.name, ext_with_dot)) return it._next();
-                if (!match_ext.allow_exact and entry.name.len == ext_with_dot.len) return it._next();
+                if (!std.mem.endsWith(u8, entry.name, ext_with_dot)) return false;
+                if (!match_ext.allow_exact and entry.name.len == ext_with_dot.len) return false;
+
+                return true;
             },
         }
-
-        return .{
-            .name = try it.arena.allocator().dupe(u8, entry.name),
-            .realpath = try it.root_dir.realpathAlloc(it.arena.allocator(), entry.name),
-        };
     }
 };
 
