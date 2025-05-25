@@ -107,16 +107,97 @@ const Command = enum {
     }
 };
 
+const FilterIterator = struct {
+    arena: std.heap.ArenaAllocator,
+    path: []const u8,
+    dir: std.fs.Dir,
+    it: std.fs.Dir.Iterator,
+    /// state enum supports automatic deinit for the iterator.
+    /// The caller may assume that if the iterator returned null,
+    /// it has performed its cleanup already.
+    state: enum { init, done, deinit, fatal, fatal_deinit },
+    /// The match strategy determines which files to pass through.
+    match: Match,
+
+    pub const Entry = struct {
+        name: []const u8,
+        realpath: []const u8,
+    };
+
+    pub const Match = union(enum) {
+        all: void,
+    };
+
+    pub fn all(allocator: mem.Allocator, abs_path: []const u8) !FilterIterator {
+        return try init(allocator, abs_path, .all);
+    }
+
+    pub fn init(allocator: mem.Allocator, abs_path: []const u8, match: Match) !FilterIterator {
+        var dir = try std.fs.openDirAbsolute(abs_path, .{ .iterate = true });
+        errdefer dir.close();
+
+        return .{
+            .arena = std.heap.ArenaAllocator.init(allocator),
+            .path = abs_path,
+            .dir = dir,
+            .it = dir.iterate(),
+            .state = .init,
+            .match = match,
+        };
+    }
+
+    pub fn deinit(it: *FilterIterator) void {
+        switch (it.state) {
+            .init, .done => {
+                it.dir.close();
+                it.arena.deinit();
+                it.state = .deinit;
+            },
+            .fatal => {
+                it.dir.close();
+                it.arena.deinit();
+                it.state = .fatal_deinit;
+            },
+            .deinit, .fatal_deinit => {},
+        }
+    }
+
+    /// Retrieve the next entry, updating the internal state as necessary.
+    /// Performs assertions depending on internal state to validate
+    /// correct usage.
+    pub fn next(it: *FilterIterator) !?Entry {
+        switch (it.state) {
+            .init => {},
+            .done, .deinit, .fatal, .fatal_deinit => unreachable,
+        }
+
+        return it._next() catch |err| {
+            it.state = .fatal;
+            it.deinit();
+            return err;
+        } orelse {
+            it.state = .done;
+            it.deinit();
+            return null;
+        };
+    }
+
+    /// Internal function to return the next entry.
+    fn _next(it: *FilterIterator) !?Entry {
+        const entry = try it.it.next() orelse return null;
+        return .{
+            .name = try it.arena.allocator().dupe(u8, entry.name),
+            .realpath = try it.dir.realpathAlloc(it.arena.allocator(), entry.name),
+        };
+    }
+};
+
 fn installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
-    var dir = try std.fs.openDirAbsolute(dots_path, .{ .iterate = true });
-    defer dir.close();
+    var it: FilterIterator = try .all(allocator, dots_path);
+    defer it.deinit();
 
-    var it = dir.iterate();
     while (try it.next()) |entry| {
-        const section_path = try dir.realpathAlloc(allocator, entry.name);
-        defer allocator.free(section_path);
-
-        try Command.install_dots_section.dispatch(allocator, section_path);
+        try Command.install_dots_section.dispatch(allocator, entry.realpath);
     }
 }
 
