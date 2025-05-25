@@ -40,27 +40,94 @@ const AppOptions = struct {
     args: []const u8,
 };
 
+const Command = enum {
+    direxists,
+    link,
+    download,
+    apt_install,
+    @"all:direxists",
+    @"all:link",
+
+    pub fn parse(command_str: []const u8) ?Command {
+        inline for (std.meta.fields(Command)) |field| {
+            if (std.mem.eql(u8, command_str, field.name)) {
+                return @field(Command, field.name);
+            }
+        }
+
+        return null;
+    }
+};
+
 pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
-    if (std.mem.eql(u8, "direxists", options.command)) {
-        try direxists(options.args);
-    } else if (std.mem.eql(u8, "link", options.command)) {
-        var it = std.mem.splitScalar(u8, options.args, ' ');
-        const target = it.next() orelse return error.MissingLinkArgument;
-        const link_name = it.next() orelse return error.MissingLinkArgument;
+    const command = Command.parse(options.command) orelse {
+        std.log.err("Invalid command [{s}]", .{options.command});
+        return error.InvalidCommand;
+    };
+    switch (command) {
+        .direxists => try direxists(options.args),
+        .link => {
+            var it = std.mem.splitScalar(u8, options.args, ' ');
+            const target = it.next() orelse return error.MissingLinkArgument;
+            const link_name = it.next() orelse return error.MissingLinkArgument;
 
-        try link(target, link_name);
-    } else if (std.mem.eql(u8, options.command, "download")) {
-        var it = std.mem.splitScalar(u8, options.args, ' ');
-        const url = it.next() orelse return error.MissingLinkArgument;
-        const destination_file = it.next() orelse return error.MissingLinkArgument;
+            try link(target, link_name);
+        },
+        .download => {
+            var it = std.mem.splitScalar(u8, options.args, ' ');
+            const url = it.next() orelse return error.MissingLinkArgument;
+            const destination_file = it.next() orelse return error.MissingLinkArgument;
 
-        try download(allocator, url, destination_file);
-    } else if (std.mem.eql(u8, options.command, "apt_install")) {
-        try aptInstall(allocator, options.args);
-    } else if (std.mem.eql(u8, options.command, "all:direxists")) {
-        try allDirExists(allocator, options.args);
-    } else {
-        return error.UnknownCommand;
+            try download(allocator, url, destination_file);
+        },
+        .apt_install => try aptInstall(allocator, options.args),
+        .@"all:direxists" => try allDirExists(allocator, options.args),
+        .@"all:link" => try allLink(allocator, options.args),
+    }
+}
+
+fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
+    const ext = ".link";
+
+    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
+    defer dir.close();
+
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
+        if (entry.name.len <= ext.len) continue;
+
+        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        defer allocator.free(content);
+
+        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
+            content[0..end]
+        else
+            content;
+
+        const target_owned, const link_name_owned = input: {
+            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidLinkContent;
+            const target = line[0..div];
+            const link_name = line[div + "->".len ..];
+            if (target.len == 0) return error.InvalidLinkContent;
+
+            if (!(link_name.len > 2 and std.mem.startsWith(u8, link_name, "~/"))) return error.InvalidLinkContent;
+
+            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+            defer allocator.free(home);
+
+            const link_name_owned: []const u8 = try std.fs.path.join(allocator, &.{ home, link_name[2..] });
+            errdefer allocator.free(link_name_owned);
+
+            const target_owned = try dir.realpathAlloc(allocator, target);
+            errdefer allocator.free(target_owned);
+
+            break :input .{ target_owned, link_name_owned };
+        };
+        defer allocator.free(target_owned);
+        defer allocator.free(link_name_owned);
+
+        try link(target_owned, link_name_owned);
     }
 }
 
@@ -109,6 +176,7 @@ fn direxists(abs_path: []const u8) !void {
 }
 
 fn link(target: []const u8, link_name: []const u8) !void {
+    std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
     if (!std.fs.path.isAbsolute(target)) return error.InvalidLinkArgument;
     std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
 

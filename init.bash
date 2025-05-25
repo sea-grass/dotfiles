@@ -28,17 +28,7 @@ cmd="./zig-out/bin/cmd"
 
 while IFS= read -r -d '' section; do
   "$cmd" all:direxists "$section"
-
-  while IFS= read -r -d '' link_command; do
-    pat='(.+)->~/(.+)'
-    link_data=$(head -1 "$link_command")   
-
-    [[ "$link_data" =~ $pat ]] || error "link [$section/$link_command] has malformed contents"
-    target="$section/${BASH_REMATCH[1]}"
-    link_name="$HOME/${BASH_REMATCH[2]}"
-    
-    "$cmd" link "$target" "$link_name"
-  done < <(find "$section" -type f -name '*.link' -print0)
+  "$cmd" all:link "$section"
 
   while IFS= read -r -d '' download_command; do
     pat='(.+)->~/(.+)'
