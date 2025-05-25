@@ -57,6 +57,39 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         try download(allocator, url, destination_file);
     } else if (std.mem.eql(u8, options.command, "apt_install")) {
         try aptInstall(allocator, options.args);
+    } else if (std.mem.eql(u8, options.command, "all:direxists")) {
+        try allDirExists(allocator, options.args);
+    } else {
+        return error.UnknownCommand;
+    }
+}
+
+fn allDirExists(allocator: mem.Allocator, section_path: []const u8) !void {
+    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
+    defer dir.close();
+
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        if (entry.name.len > 4 and std.mem.endsWith(u8, entry.name, ".dir")) {
+            var buf: [std.fs.max_path_bytes]u8 = undefined;
+            const content = try dir.readFile(entry.name, &buf);
+            const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
+                content[0..end]
+            else
+                content;
+
+            if (line.len > 2 and std.mem.startsWith(u8, line, "~/")) {
+                const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+                defer allocator.free(home);
+
+                const path: []const u8 = try std.fs.path.join(allocator, &.{ home, line[2..] });
+                defer allocator.free(path);
+
+                try direxists(path);
+            } else {
+                return error.InvalidDirexistsContent;
+            }
+        }
     }
 }
 

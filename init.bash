@@ -27,16 +27,7 @@ fi
 cmd="./zig-out/bin/cmd"
 
 while IFS= read -r -d '' section; do
-  while IFS= read -r -d '' dir_command; do
-    # shellcheck disable=SC2088 # Tilde should not be expanded
-    pat='~/(.+)'
-    dir_data=$(head -1 "$dir_command")
-
-    [[ "$dir_data" =~ $pat ]] || error "dir [$section/$dir_command] has malformed contents"
-    dir="$HOME/${BASH_REMATCH[1]}"
-
-    "$cmd" direxists "$dir"
-  done < <(find "$section" -type f -name '*.dir' -print0)
+  "$cmd" all:direxists "$section"
 
   while IFS= read -r -d '' link_command; do
     pat='(.+)->~/(.+)'
