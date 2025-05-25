@@ -3,6 +3,23 @@ const mem = std.mem;
 
 pub const std_options: std.Options = .{
     .log_level = .debug,
+    .logFn = struct {
+        fn logFn(
+            comptime message_level: std.log.Level,
+            comptime scope: @TypeOf(.enum_literal),
+            comptime format: []const u8,
+            args: anytype,
+        ) void {
+            const tmpl = switch (message_level) {
+                else => switch (scope) {
+                    .default => comptime message_level.asText() ++ " " ++ format ++ "\n",
+                    else => comptime message_level.asText() ++ " " ++ @tagName(scope) ++ " " ++ format ++ "\n",
+                },
+            };
+
+            std.io.getStdOut().writer().print(tmpl, args) catch {};
+        }
+    }.logFn,
 };
 
 pub fn main() !void {
@@ -95,7 +112,7 @@ const Command = enum {
         defer allocator.free(target_owned);
         defer allocator.free(link_name_owned);
 
-        try link(target_owned, link_name_owned);
+        try Action.link(target_owned, link_name_owned);
     }
 
     fn _download(allocator: mem.Allocator, args: []const u8) !void {
@@ -121,7 +138,7 @@ const Command = enum {
         };
         defer allocator.free(destination_path_owned);
 
-        try download(allocator, url, destination_path_owned);
+        try Action.download(allocator, url, destination_path_owned);
     }
 
     fn _installDotsSection(allocator: mem.Allocator, args: []const u8) !void {
@@ -161,16 +178,16 @@ const Command = enum {
         while (it.next()) |line| {
             if (line.len == 0) continue;
 
-            try aptInstall(allocator, line);
+            try Action.aptInstall(allocator, line);
         }
     }
 
     pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
         switch (command) {
-            .direxists => try direxists(args),
+            .direxists => try Action.direxists(args),
             .link => try _link(allocator, args),
             .download => try _download(allocator, args),
-            .apt_install => try aptInstall(allocator, args),
+            .apt_install => try Action.aptInstall(allocator, args),
             .install_dots => try installDots(allocator, args),
             .install_dots_section => try _installDotsSection(allocator, args),
         }
@@ -353,83 +370,85 @@ fn isAptGetPresent() !bool {
     };
 }
 
-fn aptInstall(allocator: mem.Allocator, package: []const u8) !void {
-    var p = std.process.Child.init(&.{ "bash", "apt_install.sh", package }, allocator);
-    p.cwd_dir = std.fs.cwd();
-    const term = try p.spawnAndWait();
-    _ = term;
-}
+const Action = struct {
+    fn aptInstall(allocator: mem.Allocator, package: []const u8) !void {
+        var p = std.process.Child.init(&.{ "bash", "apt_install.sh", package }, allocator);
+        p.cwd_dir = std.fs.cwd();
+        const term = try p.spawnAndWait();
+        _ = term;
+    }
 
-fn direxists(abs_path: []const u8) !void {
-    std.log.info("direxists {s}", .{abs_path});
-    std.fs.makeDirAbsolute(abs_path) catch |err| switch (err) {
-        error.PathAlreadyExists => {},
-        else => return err,
-    };
-}
-
-fn link(target: []const u8, link_name: []const u8) !void {
-    std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
-    if (!std.fs.path.isAbsolute(target)) return error.InvalidLinkArgument;
-    std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
-
-    const stat = try std.fs.cwd().statFile(target);
-    const flags: std.fs.Dir.SymLinkFlags = .{ .is_directory = stat.kind == .directory };
-    std.fs.symLinkAbsolute(
-        target,
-        link_name,
-        flags,
-    ) catch |err| switch (err) {
-        error.PathAlreadyExists => {},
-        else => return err,
-    };
-}
-
-fn download(allocator: mem.Allocator, url: []const u8, destination_file: []const u8) !void {
-    std.log.info("download {s} -> {s}", .{ url, destination_file });
-
-    if (!std.fs.path.isAbsolute(destination_file)) return error.InvalidDownloadArgument;
-
-    const exists: bool = exists: {
-        std.fs.accessAbsolute(destination_file, .{}) catch |err| switch (err) {
-            error.FileNotFound => break :exists false,
+    fn direxists(abs_path: []const u8) !void {
+        std.log.info("direxists {s}", .{abs_path});
+        std.fs.makeDirAbsolute(abs_path) catch |err| switch (err) {
+            error.PathAlreadyExists => {},
             else => return err,
         };
-
-        break :exists true;
-    };
-    if (exists) {
-        std.log.debug("download destination file \"{s}\" already exists. Not overwriting.", .{destination_file});
-    } else {
-        //
-
-        var arena: std.heap.ArenaAllocator = .init(allocator);
-        defer arena.deinit();
-
-        var client: std.http.Client = .{ .allocator = arena.allocator() };
-
-        var header_buf: [4096]u8 = undefined;
-        var request = try client.open(.GET, try std.Uri.parse(url), .{
-            .server_header_buffer = &header_buf,
-        });
-        defer request.deinit();
-
-        try request.send();
-        try request.finish();
-        try request.wait();
-
-        switch (request.response.status) {
-            .ok => {},
-            else => return error.UnexpectedResponseStatus,
-        }
-
-        const max_body_size: usize = 10 * 1024 * 1024;
-        var body_buf: [max_body_size]u8 = undefined;
-
-        const len = try request.readAll(&body_buf);
-
-        var file = try std.fs.createFileAbsolute(destination_file, .{});
-        defer file.close();
-        try file.writeAll(body_buf[0..len]);
     }
-}
+
+    fn link(target: []const u8, link_name: []const u8) !void {
+        std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
+        if (!std.fs.path.isAbsolute(target)) return error.InvalidLinkArgument;
+        std.log.info("link \"{s}\" \"{s}\"", .{ target, link_name });
+
+        const stat = try std.fs.cwd().statFile(target);
+        const flags: std.fs.Dir.SymLinkFlags = .{ .is_directory = stat.kind == .directory };
+        std.fs.symLinkAbsolute(
+            target,
+            link_name,
+            flags,
+        ) catch |err| switch (err) {
+            error.PathAlreadyExists => {},
+            else => return err,
+        };
+    }
+
+    fn download(allocator: mem.Allocator, url: []const u8, destination_file: []const u8) !void {
+        std.log.info("download {s} -> {s}", .{ url, destination_file });
+
+        if (!std.fs.path.isAbsolute(destination_file)) return error.InvalidDownloadArgument;
+
+        const exists: bool = exists: {
+            std.fs.accessAbsolute(destination_file, .{}) catch |err| switch (err) {
+                error.FileNotFound => break :exists false,
+                else => return err,
+            };
+
+            break :exists true;
+        };
+        if (exists) {
+            std.log.debug("download destination file \"{s}\" already exists. Not overwriting.", .{destination_file});
+        } else {
+            //
+
+            var arena: std.heap.ArenaAllocator = .init(allocator);
+            defer arena.deinit();
+
+            var client: std.http.Client = .{ .allocator = arena.allocator() };
+
+            var header_buf: [4096]u8 = undefined;
+            var request = try client.open(.GET, try std.Uri.parse(url), .{
+                .server_header_buffer = &header_buf,
+            });
+            defer request.deinit();
+
+            try request.send();
+            try request.finish();
+            try request.wait();
+
+            switch (request.response.status) {
+                .ok => {},
+                else => return error.UnexpectedResponseStatus,
+            }
+
+            const max_body_size: usize = 10 * 1024 * 1024;
+            var body_buf: [max_body_size]u8 = undefined;
+
+            const len = try request.readAll(&body_buf);
+
+            var file = try std.fs.createFileAbsolute(destination_file, .{});
+            defer file.close();
+            try file.writeAll(body_buf[0..len]);
+        }
+    }
+};
