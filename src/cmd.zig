@@ -50,6 +50,7 @@ const Command = enum {
     @"all:download",
     @"all:apt_install",
     install_dots_section,
+    install_dots,
 
     pub fn parse(command_str: []const u8) ?Command {
         inline for (std.meta.fields(Command)) |field| {
@@ -60,6 +61,38 @@ const Command = enum {
 
         return null;
     }
+
+    pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
+        switch (command) {
+            .direxists => try direxists(args),
+            .link => {
+                var it = std.mem.splitScalar(u8, args, ' ');
+                const target = it.next() orelse return error.MissingLinkArgument;
+                const link_name = it.next() orelse return error.MissingLinkArgument;
+
+                try link(target, link_name);
+            },
+            .download => {
+                var it = std.mem.splitScalar(u8, args, ' ');
+                const url = it.next() orelse return error.MissingLinkArgument;
+                const destination_file = it.next() orelse return error.MissingLinkArgument;
+
+                try download(allocator, url, destination_file);
+            },
+            .apt_install => try aptInstall(allocator, args),
+            .@"all:direxists" => try allDirExists(allocator, args),
+            .@"all:link" => try allLink(allocator, args),
+            .@"all:download" => try allDownload(allocator, args),
+            .@"all:apt_install" => try allAptInstall(allocator, args),
+            .install_dots => try installDots(allocator, args),
+            .install_dots_section => {
+                try Command.@"all:direxists".dispatch(allocator, args);
+                try Command.@"all:link".dispatch(allocator, args);
+                try Command.@"all:download".dispatch(allocator, args);
+                try Command.@"all:apt_install".dispatch(allocator, args);
+            },
+        }
+    }
 };
 
 pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
@@ -67,33 +100,20 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         std.log.err("Invalid command [{s}]", .{options.command});
         return error.InvalidCommand;
     };
-    switch (command) {
-        .direxists => try direxists(options.args),
-        .link => {
-            var it = std.mem.splitScalar(u8, options.args, ' ');
-            const target = it.next() orelse return error.MissingLinkArgument;
-            const link_name = it.next() orelse return error.MissingLinkArgument;
 
-            try link(target, link_name);
-        },
-        .download => {
-            var it = std.mem.splitScalar(u8, options.args, ' ');
-            const url = it.next() orelse return error.MissingLinkArgument;
-            const destination_file = it.next() orelse return error.MissingLinkArgument;
+    try command.dispatch(allocator, options.args);
+}
 
-            try download(allocator, url, destination_file);
-        },
-        .apt_install => try aptInstall(allocator, options.args),
-        .@"all:direxists" => try allDirExists(allocator, options.args),
-        .@"all:link" => try allLink(allocator, options.args),
-        .@"all:download" => try allDownload(allocator, options.args),
-        .@"all:apt_install" => try allAptInstall(allocator, options.args),
-        .install_dots_section => {
-            try allDirExists(allocator, options.args);
-            try allLink(allocator, options.args);
-            try allDownload(allocator, options.args);
-            try allAptInstall(allocator, options.args);
-        },
+fn installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
+    var dir = try std.fs.openDirAbsolute(dots_path, .{ .iterate = true });
+    defer dir.close();
+
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        const section_path = try dir.realpathAlloc(allocator, entry.name);
+        defer allocator.free(section_path);
+
+        try Command.install_dots_section.dispatch(allocator, section_path);
     }
 }
 

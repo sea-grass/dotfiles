@@ -9,23 +9,10 @@ error() {
   exit 1
 }
 
-info() {
-  msg="$1"
-  printf "Info:\n\t%s\n" "$msg"
-}
-
-verbose() {
-  [ "$DOTS_VERBOSE" == "1" ] || return
-  msg="$1"
-  printf "VERB:\n\t%s\n" "$msg"
-}
-
 zig build cmd -freference-trace=11
 if ! zig build cmd; then
   error "Could not build cmd"
 fi
 cmd="./zig-out/bin/cmd"
 
-while IFS= read -r -d '' section; do
-  "$cmd" install_dots_section "$section"
-done < <(find "$dots" -mindepth 1 -maxdepth 1 -type d -print0)
+"$cmd" install_dots "$dots"
