@@ -29,17 +29,7 @@ cmd="./zig-out/bin/cmd"
 while IFS= read -r -d '' section; do
   "$cmd" all:direxists "$section"
   "$cmd" all:link "$section"
-
-  while IFS= read -r -d '' download_command; do
-    pat='(.+)->~/(.+)'
-    download_data=$(head -1 "$download_command")
-
-    [[ "$download_data" =~ $pat ]] || error "download [$section/$download_command] has malformed contents"
-    url="${BASH_REMATCH[1]}"
-    destination_file="$HOME/${BASH_REMATCH[2]}"
-
-    "$cmd" download "$url" "$destination_file"
-  done < <(find "$section" -type f -name '*.download' -print0)
+  "$cmd" all:download "$section"
 
   while IFS= read -r -d '' apt_command; do
     if ! { type apt-get 1>/dev/null 2>&1; }; then

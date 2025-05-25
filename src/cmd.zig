@@ -47,6 +47,7 @@ const Command = enum {
     apt_install,
     @"all:direxists",
     @"all:link",
+    @"all:download",
 
     pub fn parse(command_str: []const u8) ?Command {
         inline for (std.meta.fields(Command)) |field| {
@@ -83,6 +84,49 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         .apt_install => try aptInstall(allocator, options.args),
         .@"all:direxists" => try allDirExists(allocator, options.args),
         .@"all:link" => try allLink(allocator, options.args),
+        .@"all:download" => try allDownload(allocator, options.args),
+    }
+}
+
+fn allDownload(allocator: mem.Allocator, section_path: []const u8) !void {
+    const ext = ".download";
+
+    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
+    defer dir.close();
+
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
+        if (entry.name.len == ext.len) continue;
+
+        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        defer allocator.free(content);
+
+        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
+            content[0..end]
+        else
+            content;
+
+        const url, const destination_path_owned = input: {
+            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidDownloadContent;
+
+            const url = line[0..div];
+            if (url.len == 0) return error.InvalidDownloadContent;
+
+            const destination_path = line[div + "->".len ..];
+            if (!(destination_path.len > 2 and std.mem.startsWith(u8, destination_path, "~/"))) return error.InvalidDownloadContent;
+
+            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+            defer allocator.free(home);
+
+            const destination_path_owned = try std.fs.path.join(allocator, &.{ home, destination_path[2..] });
+            errdefer allocator.free(destination_path_owned);
+
+            break :input .{ url, destination_path_owned };
+        };
+        defer allocator.free(destination_path_owned);
+
+        try download(allocator, url, destination_path_owned);
     }
 }
 
@@ -95,7 +139,7 @@ fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
     var it = dir.iterate();
     while (try it.next()) |entry| {
         if (!std.mem.endsWith(u8, entry.name, ext)) continue;
-        if (entry.name.len <= ext.len) continue;
+        if (entry.name.len == ext.len) continue;
 
         const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
         defer allocator.free(content);
@@ -107,10 +151,11 @@ fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
 
         const target_owned, const link_name_owned = input: {
             const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidLinkContent;
+
             const target = line[0..div];
-            const link_name = line[div + "->".len ..];
             if (target.len == 0) return error.InvalidLinkContent;
 
+            const link_name = line[div + "->".len ..];
             if (!(link_name.len > 2 and std.mem.startsWith(u8, link_name, "~/"))) return error.InvalidLinkContent;
 
             const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
