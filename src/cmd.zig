@@ -49,6 +49,7 @@ const Command = enum {
     @"all:link",
     @"all:download",
     @"all:apt_install",
+    install_dots_section,
 
     pub fn parse(command_str: []const u8) ?Command {
         inline for (std.meta.fields(Command)) |field| {
@@ -87,6 +88,12 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         .@"all:link" => try allLink(allocator, options.args),
         .@"all:download" => try allDownload(allocator, options.args),
         .@"all:apt_install" => try allAptInstall(allocator, options.args),
+        .install_dots_section => {
+            try allDirExists(allocator, options.args);
+            try allLink(allocator, options.args);
+            try allDownload(allocator, options.args);
+            try allAptInstall(allocator, options.args);
+        },
     }
 }
 

@@ -27,8 +27,5 @@ fi
 cmd="./zig-out/bin/cmd"
 
 while IFS= read -r -d '' section; do
-  "$cmd" all:direxists "$section"
-  "$cmd" all:link "$section"
-  "$cmd" all:download "$section"
-  "$cmd" all:apt_install "$section"
+  "$cmd" install_dots_section "$section"
 done < <(find "$dots" -mindepth 1 -maxdepth 1 -type d -print0)
