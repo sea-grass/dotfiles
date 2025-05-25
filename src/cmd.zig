@@ -51,10 +51,6 @@ const Command = enum {
     link,
     download,
     apt_install,
-    @"all:direxists",
-    @"all:link",
-    @"all:download",
-    @"all:apt_install",
     install_dots_section,
     install_dots,
 
@@ -68,39 +64,113 @@ const Command = enum {
         return null;
     }
 
-    fn _link(args: []const u8) !void {
-        var it = std.mem.splitScalar(u8, args, ' ');
-        const target = it.next() orelse return error.MissingLinkArgument;
-        const link_name = it.next() orelse return error.MissingLinkArgument;
+    fn _link(allocator: mem.Allocator, args: []const u8) !void {
+        const line = try FilterIterator.Entry.firstLine(.{ .realpath = args, .name = undefined }, allocator);
+        defer allocator.free(line);
 
-        try link(target, link_name);
+        const target_owned, const link_name_owned = input: {
+            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidLinkContent;
+
+            const target = line[0..div];
+            if (target.len == 0) return error.InvalidLinkContent;
+
+            const link_name = line[div + "->".len ..];
+            if (!(link_name.len > 2 and std.mem.startsWith(u8, link_name, "~/"))) return error.InvalidLinkContent;
+
+            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+            defer allocator.free(home);
+
+            const link_name_owned: []const u8 = try std.fs.path.join(allocator, &.{ home, link_name[2..] });
+            errdefer allocator.free(link_name_owned);
+
+            // The target is relative to this link file
+            var parent_dir = try std.fs.openDirAbsolute(std.fs.path.dirname(args).?, .{});
+            defer parent_dir.close();
+
+            const target_owned: []const u8 = try parent_dir.realpathAlloc(allocator, target);
+            errdefer allocator.free(target_owned);
+
+            break :input .{ target_owned, link_name_owned };
+        };
+        defer allocator.free(target_owned);
+        defer allocator.free(link_name_owned);
+
+        try link(target_owned, link_name_owned);
     }
 
     fn _download(allocator: mem.Allocator, args: []const u8) !void {
-        var it = std.mem.splitScalar(u8, args, ' ');
-        const url = it.next() orelse return error.MissingLinkArgument;
-        const destination_file = it.next() orelse return error.MissingLinkArgument;
+        const line = try FilterIterator.Entry.firstLine(.{ .name = undefined, .realpath = args }, allocator);
+        defer allocator.free(line);
 
-        try download(allocator, url, destination_file);
+        const url, const destination_path_owned = input: {
+            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidDownloadContent;
+
+            const url = line[0..div];
+            if (url.len == 0) return error.InvalidDownloadContent;
+
+            const destination_path = line[div + "->".len ..];
+            if (!(destination_path.len > 2 and std.mem.startsWith(u8, destination_path, "~/"))) return error.InvalidDownloadContent;
+
+            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
+            defer allocator.free(home);
+
+            const destination_path_owned = try std.fs.path.join(allocator, &.{ home, destination_path[2..] });
+            errdefer allocator.free(destination_path_owned);
+
+            break :input .{ url, destination_path_owned };
+        };
+        defer allocator.free(destination_path_owned);
+
+        try download(allocator, url, destination_path_owned);
     }
 
     fn _installDotsSection(allocator: mem.Allocator, args: []const u8) !void {
-        try Command.@"all:direxists".dispatch(allocator, args);
-        try Command.@"all:link".dispatch(allocator, args);
-        try Command.@"all:download".dispatch(allocator, args);
-        try Command.@"all:apt_install".dispatch(allocator, args);
+        var it: FilterIterator = try .all(allocator, args);
+
+        const apt_is_available = try isAptGetPresent();
+        // We print unavailability of apt only if a dots section declares apt dependencies
+        var apt_message_printed = false;
+
+        while (try it.next()) |entry| {
+            if (matchExt(entry.name, "dir", false)) {
+                try Command.direxists.dispatch(allocator, entry.realpath);
+            } else if (matchExt(entry.name, "link", false)) {
+                try Command.link.dispatch(allocator, entry.realpath);
+            } else if (matchExt(entry.name, "download", false)) {
+                try Command.download.dispatch(allocator, entry.realpath);
+            } else if (matchExt(entry.name, "apt", false)) {
+                if (apt_is_available) {
+                    try Command.apt_install.dispatch(allocator, args);
+                } else {
+                    if (!apt_message_printed) {
+                        std.log.info("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
+                            std.fs.path.basename(args),
+                        });
+                        apt_message_printed = true;
+                    }
+                }
+            }
+        }
+    }
+
+    fn _aptInstall(allocator: mem.Allocator, args: []const u8) !void {
+        const content = try FilterIterator.Entry.content(.{ .realpath = args, .name = undefined }, allocator);
+        defer allocator.free(content);
+
+        var it = std.mem.splitScalar(u8, content, '\n');
+        while (it.next()) |line| {
+            if (line.len == 0) continue;
+
+            try aptInstall(allocator, line);
+        }
     }
 
     pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
         switch (command) {
             .direxists => try direxists(args),
-            .link => try _link(args),
+            .link => try _link(allocator, args),
             .download => try _download(allocator, args),
             .apt_install => try aptInstall(allocator, args),
-            .@"all:direxists" => try allDirExists(allocator, args),
-            .@"all:link" => try allLink(allocator, args),
-            .@"all:download" => try allDownload(allocator, args),
-            .@"all:apt_install" => try allAptInstall(allocator, args),
             .install_dots => try installDots(allocator, args),
             .install_dots_section => try _installDotsSection(allocator, args),
         }
@@ -131,6 +201,16 @@ const FilterIterator = struct {
                 entry.realpath,
                 std.math.maxInt(usize),
             );
+        }
+
+        pub fn firstLine(entry: Entry, allocator: mem.Allocator) ![]const u8 {
+            var file = try std.fs.openFileAbsolute(entry.realpath, .{});
+            defer file.close();
+
+            const line: []const u8 = try file.reader().readUntilDelimiterOrEofAlloc(allocator, '\n', std.math.maxInt(usize)) orelse return error.SomeError;
+            errdefer allocator.free(line);
+
+            return line;
         }
     };
 
@@ -222,23 +302,29 @@ const FilterIterator = struct {
     }
 
     fn matches(it: *FilterIterator, entry: std.fs.Dir.Entry) bool {
-        switch (it.match) {
-            .all => return true,
-            .match_ext => |match_ext| {
-                var ext_with_dot_buf: [std.fs.max_path_bytes]u8 = undefined;
-                ext_with_dot_buf[0] = '.';
-                @memcpy(ext_with_dot_buf[1 .. 1 + match_ext.ext.len], match_ext.ext);
-                const ext_with_dot: []const u8 = ext_with_dot_buf[0 .. 1 + match_ext.ext.len];
-
-                return switch (std.math.order(entry.name.len, ext_with_dot.len)) {
-                    .lt => false,
-                    .eq => match_ext.allow_exact and mem.eql(u8, entry.name, ext_with_dot),
-                    .gt => mem.endsWith(u8, entry.name, ext_with_dot),
-                };
-            },
-        }
+        return switch (it.match) {
+            .all => true,
+            .match_ext => |match_ext| matchExt(
+                entry.name,
+                match_ext.ext,
+                match_ext.allow_exact,
+            ),
+        };
     }
 };
+
+fn matchExt(file_path: []const u8, ext: []const u8, allow_exact: bool) bool {
+    var ext_with_dot_buf: [std.fs.max_path_bytes]u8 = undefined;
+    ext_with_dot_buf[0] = '.';
+    @memcpy(ext_with_dot_buf[1 .. 1 + ext.len], ext);
+    const ext_with_dot: []const u8 = ext_with_dot_buf[0 .. 1 + ext.len];
+
+    return switch (std.math.order(file_path.len, ext_with_dot.len)) {
+        .lt => false,
+        .eq => allow_exact and mem.eql(u8, file_path, ext_with_dot),
+        .gt => mem.endsWith(u8, file_path, ext_with_dot),
+    };
+}
 
 fn installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
     var it: FilterIterator = try .all(allocator, dots_path);
@@ -265,131 +351,6 @@ fn isAptGetPresent() !bool {
         },
         else => error.UnexpectedCheckAptGetResult,
     };
-}
-
-fn allAptInstall(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = "apt";
-
-    if (!try isAptGetPresent()) {
-        std.log.info("apt-get is not present on this system. Not installing dependencies for [{s}]", .{section_path});
-        return;
-    }
-
-    var it: FilterIterator = try .ext(allocator, section_path, ext);
-    while (try it.next()) |entry| {
-        const content = try entry.content(allocator);
-        defer allocator.free(content);
-
-        var line_it = std.mem.splitScalar(u8, content, '\n');
-        while (line_it.next()) |line| {
-            if (line.len == 0) continue;
-
-            try aptInstall(allocator, line);
-        }
-    }
-}
-
-fn allDownload(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = "download";
-
-    var it: FilterIterator = try .ext(allocator, section_path, ext);
-    while (try it.next()) |entry| {
-        const content = try entry.content(allocator);
-        defer allocator.free(content);
-
-        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
-            content[0..end]
-        else
-            content;
-
-        const url, const destination_path_owned = input: {
-            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidDownloadContent;
-
-            const url = line[0..div];
-            if (url.len == 0) return error.InvalidDownloadContent;
-
-            const destination_path = line[div + "->".len ..];
-            if (!(destination_path.len > 2 and std.mem.startsWith(u8, destination_path, "~/"))) return error.InvalidDownloadContent;
-
-            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
-            defer allocator.free(home);
-
-            const destination_path_owned = try std.fs.path.join(allocator, &.{ home, destination_path[2..] });
-            errdefer allocator.free(destination_path_owned);
-
-            break :input .{ url, destination_path_owned };
-        };
-        defer allocator.free(destination_path_owned);
-
-        try download(allocator, url, destination_path_owned);
-    }
-}
-
-fn allLink(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = "link";
-    var it: FilterIterator = try .ext(allocator, section_path, ext);
-
-    while (try it.next()) |entry| {
-        const content = try entry.content(allocator);
-        defer allocator.free(content);
-
-        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
-            content[0..end]
-        else
-            content;
-
-        const target_owned, const link_name_owned = input: {
-            const div = std.mem.indexOf(u8, line, "->") orelse return error.InvalidLinkContent;
-
-            const target = line[0..div];
-            if (target.len == 0) return error.InvalidLinkContent;
-
-            const link_name = line[div + "->".len ..];
-            if (!(link_name.len > 2 and std.mem.startsWith(u8, link_name, "~/"))) return error.InvalidLinkContent;
-
-            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
-            defer allocator.free(home);
-
-            const link_name_owned: []const u8 = try std.fs.path.join(allocator, &.{ home, link_name[2..] });
-            errdefer allocator.free(link_name_owned);
-
-            const target_owned = try it.root_dir.realpathAlloc(allocator, target);
-            errdefer allocator.free(target_owned);
-
-            break :input .{ target_owned, link_name_owned };
-        };
-        defer allocator.free(target_owned);
-        defer allocator.free(link_name_owned);
-
-        try link(target_owned, link_name_owned);
-    }
-}
-
-fn allDirExists(allocator: mem.Allocator, section_path: []const u8) !void {
-    const ext = "dir";
-    var it: FilterIterator = try .ext(allocator, section_path, ext);
-
-    while (try it.next()) |entry| {
-        const content = try entry.content(allocator);
-        defer allocator.free(content);
-
-        const line = if (std.mem.indexOfScalar(u8, content, '\n')) |end|
-            content[0..end]
-        else
-            content;
-
-        if (line.len > 2 and std.mem.startsWith(u8, line, "~/")) {
-            const home: []const u8 = try std.process.getEnvVarOwned(allocator, "HOME");
-            defer allocator.free(home);
-
-            const path: []const u8 = try std.fs.path.join(allocator, &.{ home, line[2..] });
-            defer allocator.free(path);
-
-            try direxists(path);
-        } else {
-            return error.InvalidDirexistsContent;
-        }
-    }
 }
 
 fn aptInstall(allocator: mem.Allocator, package: []const u8) !void {
