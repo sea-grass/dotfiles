@@ -156,24 +156,28 @@ const Command = enum {
         var apt_message_printed = false;
 
         while (try it.next()) |entry| {
-            if (matchExt(entry.name, "dir", false)) {
-                try Command.direxists.dispatch(allocator, entry.realpath);
-            } else if (matchExt(entry.name, "link", false)) {
-                try Command.link.dispatch(allocator, entry.realpath);
-            } else if (matchExt(entry.name, "download", false)) {
-                try Command.download.dispatch(allocator, entry.realpath);
-            } else if (matchExt(entry.name, "apt", false)) {
-                if (apt_is_available) {
-                    try Command.apt_install.dispatch(allocator, args);
-                } else {
-                    if (!apt_message_printed) {
-                        log.warn("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
-                            std.fs.path.basename(args),
-                        });
-                        apt_message_printed = true;
+            const command: Command = command: {
+                if (matchExt(entry.name, "dir", false)) break :command .direxists;
+                if (matchExt(entry.name, "link", false)) break :command .link;
+                if (matchExt(entry.name, "download", false)) break :command .download;
+                if (matchExt(entry.name, "apt", false)) {
+                    if (apt_is_available) {
+                        break :command .apt_install;
+                    } else {
+                        if (!apt_message_printed) {
+                            log.warn("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
+                                std.fs.path.basename(args),
+                            });
+                            apt_message_printed = true;
+                        }
+                        continue;
                     }
                 }
-            }
+
+                continue;
+            };
+
+            try command.dispatch(allocator, entry.realpath);
         }
     }
 
@@ -189,13 +193,22 @@ const Command = enum {
         }
     }
 
+    fn _installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
+        var it: FilterIterator = try .all(allocator, dots_path);
+        defer it.deinit();
+
+        while (try it.next()) |entry| {
+            try Command.install_dots_section.dispatch(allocator, entry.realpath);
+        }
+    }
+
     pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
         switch (command) {
             .direxists => try Action.direxists(args),
             .link => try _link(allocator, args),
             .download => try _download(allocator, args),
             .apt_install => try Action.aptInstall(allocator, args),
-            .install_dots => try installDots(allocator, args),
+            .install_dots => try _installDots(allocator, args),
             .install_dots_section => try _installDotsSection(allocator, args),
         }
     }
@@ -348,15 +361,6 @@ fn matchExt(file_path: []const u8, ext: []const u8, allow_exact: bool) bool {
         .eq => allow_exact and mem.eql(u8, file_path, ext_with_dot),
         .gt => mem.endsWith(u8, file_path, ext_with_dot),
     };
-}
-
-fn installDots(allocator: mem.Allocator, dots_path: []const u8) !void {
-    var it: FilterIterator = try .all(allocator, dots_path);
-    defer it.deinit();
-
-    while (try it.next()) |entry| {
-        try Command.install_dots_section.dispatch(allocator, entry.realpath);
-    }
 }
 
 fn isAptGetPresent() !bool {
