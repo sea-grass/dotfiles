@@ -62,6 +62,8 @@ local loadPlugins = function()
 
   Plug 'tpope/vim-fugitive'
 
+  Plug 'loctvl842/monokai-pro.nvim'
+
   Plug 'tpope/vim-repeat'
   Plug('ggandor/leap.nvim', {
     config = function()
@@ -174,6 +176,18 @@ local loadLocals = function()
   vim.cmd.runtime('./locals/locals.vim')
 end
 
+local setTransparentBackground = function()
+  vim.api.nvim_set_hl(0, "Normal", { bg = "none" })
+  vim.api.nvim_set_hl(0, "NormalFloat", { bg = "none" })
+end
+
+local loadTheme = function()
+  vim.cmd.colorscheme "monokai-pro"
+
+  setTransparentBackground()
+end
+
+
 -- :h vim.opt
 -- • |vim.opt|:        behaves like |:set|
 vim.opt.compatible = false
@@ -193,9 +207,4 @@ end))
 loadPlugins()
 loadMaps()
 loadLocals()
--- orangeish
-vim.cmd.colorscheme "desert"
--- light
-vim.cmd.colorscheme "zellner"
--- dark
-vim.cmd.colorscheme "slate"
+loadTheme()
