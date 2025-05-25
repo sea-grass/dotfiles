@@ -1,11 +1,28 @@
+/// Command represents a CLI-runnable task.
+/// The most common task is `install_dots`.
+///
+/// A Command may also be defined as a CommandFile.
+/// A CommandFile has a particular file extension
+/// and parsable contents representing the command's arguments.
+///
+/// The `install_dots_section` command will identify all
+/// command files within its directory and invoke
+/// the appropriate commands.
 pub const Command = enum {
+    /// Ensure dir exists
     direxists,
+    /// Create symlink at destination pointing to target
     link,
+    /// Download url to destination
     download,
+    /// Install specific apt package(s)
     apt_install,
+    /// Install specific dots section
     install_dots_section,
+    /// Install all dots sections
     install_dots,
 
+    /// Return the command matching its string representation.
     pub fn parse(command_str: []const u8) ?Command {
         inline for (std.meta.fields(Command)) |field| {
             if (std.mem.eql(u8, command_str, field.name)) {
@@ -16,6 +33,11 @@ pub const Command = enum {
         return null;
     }
 
+    /// Parse the cli args for the given command and execute the associated
+    /// action.
+    ///
+    /// This typically means reading the command file and parsing the arguments
+    /// before passing them off to the appropriate action.
     pub fn dispatch(command: Command, allocator: mem.Allocator, args: []const u8) anyerror!void {
         switch (command) {
             .direxists => try Action.direxists(args),
