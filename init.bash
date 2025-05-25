@@ -20,35 +20,6 @@ verbose() {
   printf "VERB:\n\t%s\n" "$msg"
 }
 
-direxists() {
-  [ $# -eq 1 ] || error "direxists requires 1 argument"
-  dir="$1"
-
-  info "direxists $dir"
-  mkdir -p "$dir"
-}
-
-link() {
-  [ $# -eq 2 ] || error "link requires 2 arguments"
-  target="$1"
-  link_name="$2"
-
-  info "link \"$target\" \"$link_name\""
-  [ -a "$target" ] || error "target \"$target\" does not exist"
-
-  if [ -h "$link_name" ]; then
-    if [ "$target" -ef "$link_name" ]; then
-      verbose "link \"$link_name\" already exists"
-    else
-      error "link \"$link_name\" already exists but points to a different file. Not overwriting"
-    fi
-  elif [ -f "$link_name" ]; then
-    error "link \"$link_name\" is a real file. Not overwriting"
-  else
-    ln -s "$target" "$link_name"
-  fi
-}
-
 download() {
   [ $# -eq 2 ] || error "download requires 2 arguments"
   url="$1"
@@ -76,6 +47,9 @@ apt_install() {
   fi
 }
 
+zig build cmd
+cmd="./zig-out/bin/cmd"
+
 while IFS= read -r -d '' section; do
   while IFS= read -r -d '' dir_command; do
     # shellcheck disable=SC2088 # Tilde should not be expanded
@@ -85,7 +59,7 @@ while IFS= read -r -d '' section; do
     [[ "$dir_data" =~ $pat ]] || error "dir [$section/$dir_command] has malformed contents"
     dir="$HOME/${BASH_REMATCH[1]}"
 
-    direxists "$dir"
+    "$cmd" direxists "$dir"
   done < <(find "$section" -type f -name '*.dir' -print0)
 
   while IFS= read -r -d '' link_command; do
@@ -96,7 +70,7 @@ while IFS= read -r -d '' section; do
     target="$section/${BASH_REMATCH[1]}"
     link_name="$HOME/${BASH_REMATCH[2]}"
     
-    link "$target" "$link_name"
+    "$cmd" link "$target" "$link_name"
   done < <(find "$section" -type f -name '*.link' -print0)
 
   while IFS= read -r -d '' download_command; do
