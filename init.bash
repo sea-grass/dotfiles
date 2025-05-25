@@ -20,19 +20,6 @@ verbose() {
   printf "VERB:\n\t%s\n" "$msg"
 }
 
-apt_install() {
-  [ $# -eq 1 ] || error "apt_install requires 1 argument"
-  package="$1"
-  info "apt_install $package"
-
-  if dpkg -s "$package" 2>/dev/null | grep -q "Package: $package"; then
-    verbose "apt_install package $package already installed. Nothing to do"
-  else
-    info "apt_install needs to install package $package. You may need to enter your password for sudo privilege"
-    sudo apt install "$package"
-  fi
-}
-
 zig build cmd -freference-trace=11
 if ! zig build cmd; then
   error "Could not build cmd"
@@ -79,7 +66,7 @@ while IFS= read -r -d '' section; do
     else
       mapfile -t apt_data < <(cat "$apt_command")
       for package in "${apt_data[@]}"; do
-        apt_install "$package"
+        "$cmd" apt_install "$package"
       done
     fi
   done < <(find "$section" -type f -name '*.apt')

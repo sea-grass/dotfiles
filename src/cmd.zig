@@ -55,7 +55,16 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         const destination_file = it.next() orelse return error.MissingLinkArgument;
 
         try download(allocator, url, destination_file);
+    } else if (std.mem.eql(u8, options.command, "apt_install")) {
+        try aptInstall(allocator, options.args);
     }
+}
+
+fn aptInstall(allocator: mem.Allocator, package: []const u8) !void {
+    var p = std.process.Child.init(&.{ "bash", "apt_install.sh", package }, allocator);
+    p.cwd_dir = std.fs.cwd();
+    const term = try p.spawnAndWait();
+    _ = term;
 }
 
 fn direxists(abs_path: []const u8) !void {
