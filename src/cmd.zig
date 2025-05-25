@@ -48,6 +48,7 @@ const Command = enum {
     @"all:direxists",
     @"all:link",
     @"all:download",
+    @"all:apt_install",
 
     pub fn parse(command_str: []const u8) ?Command {
         inline for (std.meta.fields(Command)) |field| {
@@ -85,6 +86,53 @@ pub fn app(allocator: mem.Allocator, options: AppOptions) !void {
         .@"all:direxists" => try allDirExists(allocator, options.args),
         .@"all:link" => try allLink(allocator, options.args),
         .@"all:download" => try allDownload(allocator, options.args),
+        .@"all:apt_install" => try allAptInstall(allocator, options.args),
+    }
+}
+
+fn isAptGetPresent() !bool {
+    var buf: [4096]u8 = undefined;
+    var fba: std.heap.FixedBufferAllocator = .init(&buf);
+
+    const res = try std.process.Child.run(.{
+        .allocator = fba.allocator(),
+        .argv = &.{ "type", "apt-get", "1>/dev/null", "2>&1" },
+    });
+
+    return switch (res.term) {
+        .Exited => |exit_code| switch (exit_code) {
+            0 => true,
+            else => false,
+        },
+        else => error.UnexpectedCheckAptGetResult,
+    };
+}
+
+fn allAptInstall(allocator: mem.Allocator, section_path: []const u8) !void {
+    const ext = ".apt";
+
+    if (!try isAptGetPresent()) {
+        std.log.info("apt-get is not present on this system. Not installing dependencies for [{s}]", .{section_path});
+        return;
+    }
+
+    var dir = try std.fs.openDirAbsolute(section_path, .{ .iterate = true });
+    defer dir.close();
+
+    var it = dir.iterate();
+    while (try it.next()) |entry| {
+        if (!std.mem.endsWith(u8, entry.name, ext)) continue;
+        if (entry.name.len == ext.len) continue;
+
+        const content: []const u8 = try dir.readFileAlloc(allocator, entry.name, std.math.maxInt(usize));
+        defer allocator.free(content);
+
+        var line_it = std.mem.splitScalar(u8, content, '\n');
+        while (line_it.next()) |line| {
+            if (line.len == 0) continue;
+
+            try aptInstall(allocator, line);
+        }
     }
 }
 
