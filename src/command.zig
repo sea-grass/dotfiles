@@ -78,35 +78,47 @@ pub const Command = enum {
 
     fn _installDotsSection(allocator: mem.Allocator, args: []const u8) !void {
         std.log.scoped(.section).info("{s}", .{std.fs.path.basename(args)});
-        var it: FilterIterator = try .all(allocator, args);
 
         const apt_is_available = try isAptGetPresent();
         // We print unavailability of apt only if a dots section declares apt dependencies
         var apt_message_printed = false;
 
-        while (try it.next()) |entry| {
-            const command: Command = command: {
-                if (Match.matchExt(entry.name, "dir", false)) break :command .direxists;
-                if (Match.matchExt(entry.name, "link", false)) break :command .link;
-                if (Match.matchExt(entry.name, "download", false)) break :command .download;
-                if (Match.matchExt(entry.name, "apt", false)) {
-                    if (apt_is_available) {
-                        break :command .apt_install;
-                    } else {
-                        if (!apt_message_printed) {
-                            log.warn("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
-                                std.fs.path.basename(args),
-                            });
-                            apt_message_printed = true;
-                        }
-                        continue;
+        {
+            var dir_it: FilterIterator = try .ext(allocator, args, "dir");
+            while (try dir_it.next()) |entry| {
+                try Command.direxists.dispatch(allocator, entry.realpath);
+            }
+        }
+
+        {
+            var dir_it: FilterIterator = try .ext(allocator, args, "link");
+            while (try dir_it.next()) |entry| {
+                try Command.link.dispatch(allocator, entry.realpath);
+            }
+        }
+
+        {
+            var dir_it: FilterIterator = try .ext(allocator, args, "download");
+            while (try dir_it.next()) |entry| {
+                try Command.download.dispatch(allocator, entry.realpath);
+            }
+        }
+
+        {
+            var dir_it: FilterIterator = try .ext(allocator, args, "apt");
+            while (try dir_it.next()) |entry| {
+                if (apt_is_available) {
+                    try Command.apt_install.dispatch(allocator, entry.realpath);
+                } else {
+                    if (!apt_message_printed) {
+                        log.warn("apt-get is not present on this system. Not installing dependencies for [{s}]", .{
+                            std.fs.path.basename(args),
+                        });
+                        apt_message_printed = true;
                     }
+                    continue;
                 }
-
-                continue;
-            };
-
-            try command.dispatch(allocator, entry.realpath);
+            }
         }
     }
 
