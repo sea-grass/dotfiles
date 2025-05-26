@@ -1,5 +1,0 @@
-exec xsetroot -cursor_name left_ptr
-
-bind c exec urxvt
-
-exec urxvt -e tmux

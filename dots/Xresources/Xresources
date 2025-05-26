@@ -1,0 +1,16 @@
+XTerm.termName: xterm-256color
+XTerm.vt100.locale: false
+XTerm.vt100.utf8: true
+XTerm.vt100.backarrowKey: false
+XTerm.ttyModes: erase ^?
+
+XTerm.vt100.faceName: Droid Sans Mono:size=14:antialias=false
+!XTerm.vt100.font: 7x13
+!XTerm.vt100.faceName: Droid Sans Mono
+XTerm.vt100.faceSize: 14
+XTerm.vt100.renderFont: true
+
+
+
+
+#include ".Xresources-data/Xresources.dracula"

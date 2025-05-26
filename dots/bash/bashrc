@@ -1,0 +1,7 @@
+source ~/.bash/rc.bash
+source ~/.bash/locals.bash
+
+
+
+# Created by `pipx` on 2024-07-23 03:59:05
+export PATH="$PATH:/Users/chris/.local/bin"

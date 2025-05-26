@@ -1,3 +1,5 @@
 tmux/.tmux/plugins/*
 vim/.vim/plugged
 vim/.vim/autoload
+.zig-cache
+zig-out
